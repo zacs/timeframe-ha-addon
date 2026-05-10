@@ -505,6 +505,42 @@ class HomeAssistantApiTest < Minitest::Test
     end
   end
 
+  def test_weather_status_multiline_single_sensor
+    data = [{entity_id: "sensor.timeframe_weather_status_info", state: "air-filter,AQI 42\nwhite-balance-sunny,UV 6"}]
+
+    api = HomeAssistantApi.new({})
+    api.stub :data, data do
+      assert_equal([
+        {icon: "air-filter", label: "AQI 42"},
+        {icon: "white-balance-sunny", label: "UV 6"}
+      ], api.weather_status)
+    end
+  end
+
+  def test_top_right_multiline_single_sensor
+    data = [{entity_id: "sensor.timeframe_top_right_info", state: "home,At home\ncar,Driving"}]
+
+    api = HomeAssistantApi.new({})
+    api.stub :data, data do
+      assert_equal([
+        {icon: "home", label: "At home"},
+        {icon: "car", label: "Driving"}
+      ], api.top_right)
+    end
+  end
+
+  def test_multiline_with_blank_lines_ignored
+    data = [{entity_id: "sensor.timeframe_weather_status_info", state: "air-filter,AQI 42\n\nwhite-balance-sunny,UV 6"}]
+
+    api = HomeAssistantApi.new({})
+    api.stub :data, data do
+      assert_equal([
+        {icon: "air-filter", label: "AQI 42"},
+        {icon: "white-balance-sunny", label: "UV 6"}
+      ], api.weather_status)
+    end
+  end
+
   def test_daily_events_no_data
     api = HomeAssistantApi.new({})
     api.stub :data, [] do
@@ -915,6 +951,17 @@ class HomeAssistantApiTest < Minitest::Test
     api = HomeAssistantApi.new
     api.stub :daily_forecast, [
       {datetime: "2023-08-27T06:00:00Z", condition: "sunny", temperature: 90, templow: 65, precipitation: 0.0}
+    ] do
+      events = api.daily_calendar_events
+      assert_equal 1, events.length
+      assert_nil events.first.precip
+    end
+  end
+
+  def test_daily_calendar_events_no_precip_when_rounds_to_zero
+    api = HomeAssistantApi.new
+    api.stub :daily_forecast, [
+      {datetime: "2023-08-27T06:00:00Z", condition: "rainy", temperature: 65, templow: 50, precipitation: 0.01}
     ] do
       events = api.daily_calendar_events
       assert_equal 1, events.length

@@ -472,7 +472,8 @@ class HomeAssistantApi
           is_snow ? "cm" : "mm"
         end
         precip_icon = is_snow ? "snowflake" : "weather-rainy"
-        precip_parts = [{icon: precip_icon, label: format_precipitation(convert_precipitation(precip_mm, target_unit), target_unit)}]
+        formatted = format_precipitation(convert_precipitation(precip_mm, target_unit), target_unit)
+        precip_parts = [{icon: precip_icon, label: formatted}] unless formatted.start_with?("0.0")
       end
 
       day_icon = icon_for(day[:condition])
@@ -626,10 +627,13 @@ class HomeAssistantApi
   def sensor_parts(prefix)
     data
       .select { it[:entity_id].start_with?(prefix) && it[:state].present? }
-      .filter_map do
-        parts = it[:state].split("\n").first.split(",").map(&:strip)
-        next if parts.empty?
-        [it[:entity_id], parts]
+      .flat_map do |entity|
+        entity[:state].split("\n").filter_map do |line|
+          next if line.strip.empty?
+          parts = line.split(",").map(&:strip)
+          next if parts.empty?
+          [entity[:entity_id], parts]
+        end
       end
   end
 
@@ -639,7 +643,7 @@ class HomeAssistantApi
       result[:label] = humanize_label(parts[1]) if parts.length >= 2
       result[:rotation] = parts[2].to_i if parts.length >= 3
       result
-    end
+    end.uniq
   end
 
   def storage_key(domain)
