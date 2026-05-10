@@ -176,7 +176,8 @@ class CalendarFeedTest < Minitest::Test
         starts_at: DateTime.new(2023, 8, 27, 0, 0, 0, "-0600"),
         ends_at: DateTime.new(2023, 8, 28, 0, 0, 0, "-0600"),
         summary: "daily events should not be filtered out!",
-        icon: "alpha-c"
+        icon: "alpha-c",
+        timezone: "America/Denver"
       )
     ]
 

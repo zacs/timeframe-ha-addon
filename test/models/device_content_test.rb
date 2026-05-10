@@ -114,20 +114,23 @@ class DeviceContenttTest < Minitest::Test
   def test_serializes_events_with_icons_and_locations
     travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
       api = new_test_api
+      tz = "America/Denver"
       events = [
         DeviceEvent.new(
           starts_at: DateTime.new(2023, 8, 27, 0, 0, 0, "-0600"),
           ends_at: DateTime.new(2023, 8, 28, 0, 0, 0, "-0600"),
           summary: "All Day",
           icon: "cake-variant",
-          daily: true
+          daily: true,
+          timezone: tz
         ),
         DeviceEvent.new(
           starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"),
           ends_at: DateTime.new(2023, 8, 27, 13, 0, 0, "-0600"),
           summary: "Lunch",
           icon: "alpha-j",
-          location: "Room A"
+          location: "Room A",
+          timezone: tz
         )
       ]
       api.stub :calendars_healthy?, false do
@@ -156,11 +159,12 @@ class DeviceContenttTest < Minitest::Test
   def test_weather_row_extracts_hourly_weather
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api
+      tz = "America/Denver"
       weather_events = [
-        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "65°", icon: "weather-sunny", timezone: "America/Chicago"),
-        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "72°", icon: "weather-sunny", timezone: "America/Chicago"),
-        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "74°", icon: "weather-sunny", timezone: "America/Chicago"),
-        DeviceEvent.new(id: "_ha_weather_hour_4", starts_at: DateTime.new(2023, 8, 27, 20, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 20, 0, 0, "-0600"), summary: "60°", icon: "weather-night", timezone: "America/Chicago")
+        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "65°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "72°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "74°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_4", starts_at: DateTime.new(2023, 8, 27, 20, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 20, 0, 0, "-0600"), summary: "60°", icon: "weather-night", timezone: tz)
       ]
       api.stub :calendars_healthy?, false do
         api.stub :private_mode?, false do

@@ -41,7 +41,7 @@ class DeviceEvent
     when String
       ActiveSupport::TimeZone[@timezone].parse(starts_at)
     else
-      starts_at
+      starts_at.in_time_zone(@timezone)
     end
 
     @ends_at = case ends_at
@@ -50,7 +50,7 @@ class DeviceEvent
     when String
       ActiveSupport::TimeZone[@timezone].parse(ends_at)
     else
-      ends_at
+      ends_at.in_time_zone(@timezone)
     end
   end
 
@@ -58,7 +58,11 @@ class DeviceEvent
     length_in_seconds = end_i - start_i
 
     return false if length_in_seconds == 0
-    return false unless @starts_at.hour == 0 && @ends_at.hour == 0
+
+    local_start = @starts_at.in_time_zone(@timezone)
+    local_end = @ends_at.in_time_zone(@timezone)
+    return false unless local_start.hour == 0 && local_start.min == 0 &&
+      local_end.hour == 0 && local_end.min == 0
 
     true
   end

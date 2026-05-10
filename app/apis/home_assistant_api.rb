@@ -95,15 +95,17 @@ class HomeAssistantApi
   end
 
   def daily_events(current_time: Time.now.in_time_zone(time_zone))
-    today = current_time.to_date
+    day_start = current_time.beginning_of_day
+    day_end = day_start + 1.day
 
     sensor_parts("sensor.timeframe_daily_event").filter_map do |entity_id, parts|
       DeviceEvent.new(
         id: "_daily_event_#{entity_id}",
-        starts_at: today.to_time,
-        ends_at: (today + 1.day).to_time,
+        starts_at: day_start,
+        ends_at: day_end,
         icon: parts.first,
-        summary: (parts.length >= 2) ? humanize_label(parts.last) : ""
+        summary: (parts.length >= 2) ? humanize_label(parts.last) : "",
+        timezone: time_zone || "UTC"
       )
     end
   end

@@ -68,9 +68,10 @@ class DemoDeviceContent
 
   def build_day_groups(current_time, timezone, days: 5, include_wind: true, use_day_names: false, weather_row: false, start_offset: 0)
     today = current_time.to_date
+    tz = ActiveSupport::TimeZone[timezone]
     vacation = DeviceEvent.new(
-      starts_at: (today - 2.days).beginning_of_day,
-      ends_at: (today + 5.days).beginning_of_day,
+      starts_at: tz.local(today.year, today.month, today.day) - 2.days,
+      ends_at: tz.local(today.year, today.month, today.day) + 5.days,
       summary: "Vacation",
       icon: "plus",
       daily: true,
