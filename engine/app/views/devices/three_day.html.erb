@@ -11,10 +11,10 @@
   .three-day-weather-time { font-size: .75rem; }
   .three-day-weather-temp { font-size: 1rem; }
   .three-day-events { font-size: 1.25rem; }
-  .three-day-events table { width: 100%; border-collapse: collapse; }
+  .three-day-events table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .three-day-events td { padding: .05rem 0; }
   .three-day-event-icon { width: 1rem; text-align: center; font-size: .85rem; font-weight: bold; }
-  .three-day-event-summary { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 0; }
+  .three-day-event-summary { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
 </style>
 
 <% unless view_object[:private_mode] %>
@@ -41,16 +41,21 @@
         <% if day[:show_daily] && day[:daily].any? %>
           <div class="three-day-events">
             <% day[:daily].select { |e| e[:attachment_image] }.each do |event| %>
-              <img src="<%= event[:attachment_image] %>" style="width: 100%; display: block; margin-bottom: .25rem; border-radius: .25rem; border: 1px solid #999;">
+                <table><tr>
+                  <td class="three-day-event-summary"><%= event[:summary] %></td>
+                </tr></table>
             <% end %>
           </div>
         <% end %>
 
-        <% image_periodic = day[:periodic].select { |e| e[:attachment_image] } %>
-        <% if image_periodic.any? %>
+        <% visual_periodic = day[:periodic].select { |e| e[:attachment_image] } %>
+        <% if visual_periodic.any? %>
           <div class="three-day-events">
-            <% image_periodic.each do |event| %>
-              <img src="<%= event[:attachment_image] %>" style="width: 100%; display: block; margin-bottom: .25rem; border-radius: .25rem; border: 1px solid #999;">
+            <% visual_periodic.each do |event| %>
+                <table><tr>
+                  <td style="white-space: nowrap; font-size: .85rem; padding: 0 .35rem 0 0; width: 1%;"><%= event[:start_time] %></td>
+                  <td class="three-day-event-summary"><%= event[:summary] %></td>
+                </tr></table>
             <% end %>
           </div>
         <% end %>
