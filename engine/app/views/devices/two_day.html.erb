@@ -84,14 +84,14 @@
                 <tr>
                   <td style="white-space: nowrap; font-size: .85rem; padding: 0 .35rem 0 0; width: 1%;">
                     <% if event[:weather_ranged] %>
-                      <% parts = event[:time_html].split(" - ", 2) %>
-                      <% if parts.length == 2 && event[:time_html].match?(/[A-Z]/) %>
-                        <%= parts[0] %><br><%= parts[1] %>
+                      <% parts = event[:full_time].split(" - ", 2) %>
+                      <% if parts.length == 2 %>
+                        <%= parts[0] %> -<br><%= parts[1] %>
                       <% else %>
-                        <%= event[:time_html] %>
+                        <%= event[:full_time] %>
                       <% end %>
                     <% else %>
-                      <%= event[:start_time] %>
+                      <%= event[:full_start_time] %>
                     <% end %>
                   </td>
                   <td class="two-day-event-summary"><%= event[:summary] %></td>

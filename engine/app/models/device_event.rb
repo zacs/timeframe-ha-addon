@@ -111,6 +111,30 @@ class DeviceEvent
     id.to_s.match?(/_(precip|wind|alert)/) && start_i != end_i
   end
 
+  def full_start_time
+    start = Time.at(start_i).in_time_zone(@timezone)
+    start.strftime("%-l:%M%P")
+  end
+
+  def full_time
+    start = Time.at(start_i).in_time_zone(@timezone)
+
+    if start_i == end_i
+      return start.strftime("%-l:%M%P")
+    end
+
+    endtime = Time.at(end_i).in_time_zone(@timezone)
+    start_date = ""
+    end_date = ""
+
+    if start.to_date != endtime.to_date
+      start_date = "#{short_weekday_label(start)} "
+      end_date = "#{short_weekday_label(endtime)} "
+    end
+
+    "#{start_date}#{start.strftime("%-l:%M%P")} - #{end_date}#{endtime.strftime("%-l:%M%P")}"
+  end
+
   def start_time
     start = Time.at(start_i).in_time_zone(@timezone)
     label = start.min.positive? ? start.strftime("%-l:%M") : start.strftime("%-l")
@@ -180,6 +204,8 @@ class DeviceEvent
       location: location,
       time_html: time.to_s,
       start_time: start_time,
+      full_time: full_time,
+      full_start_time: full_start_time,
       weather_ranged: weather_ranged?,
       attachment_image: attachment_image,
       kids_icon: kids_icon,
