@@ -201,4 +201,92 @@ class DeviceContenttTest < Minitest::Test
       assert result[:start_time_only]
     end
   end
+
+  def test_include_precip_false_excludes_precip_events
+    travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
+      api = new_test_api
+      tomorrow = DateTime.new(2023, 8, 28, 14, 0, 0, "-0600")
+      api.stub :weather_healthy?, true do
+        api.stub :precip_calendar_events, [
+          DeviceEvent.new(
+            id: "#{tomorrow.to_i}_ha_precip",
+            starts_at: tomorrow,
+            ends_at: tomorrow + 2.hours,
+            summary: "Rain 0.5\"",
+            icon: "weather-rainy"
+          )
+        ] do
+          result = DeviceContent.new.call(home_assistant_api: api, include_precip: false)
+          all_periodic = result[:day_groups].flat_map { |d| d[:periodic] }
+          assert all_periodic.none? { |e| e[:summary]&.include?("Rain") }
+        end
+      end
+    end
+  end
+
+  def test_include_precip_true_includes_precip_events
+    travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
+      api = new_test_api
+      tomorrow = DateTime.new(2023, 8, 28, 14, 0, 0, "-0600")
+      api.stub :weather_healthy?, true do
+        api.stub :precip_calendar_events, [
+          DeviceEvent.new(
+            id: "#{tomorrow.to_i}_ha_precip",
+            starts_at: tomorrow,
+            ends_at: tomorrow + 2.hours,
+            summary: "Rain 0.5\"",
+            icon: "weather-rainy"
+          )
+        ] do
+          result = DeviceContent.new.call(home_assistant_api: api, include_precip: true)
+          all_periodic = result[:day_groups].flat_map { |d| d[:periodic] }
+          assert all_periodic.any? { |e| e[:summary]&.include?("Rain") }
+        end
+      end
+    end
+  end
+
+  def test_include_wind_false_excludes_wind_events
+    travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
+      api = new_test_api
+      tomorrow = DateTime.new(2023, 8, 28, 14, 0, 0, "-0600")
+      api.stub :weather_healthy?, true do
+        api.stub :wind_calendar_events, [
+          DeviceEvent.new(
+            id: "#{tomorrow.to_i}_ha_wind",
+            starts_at: tomorrow,
+            ends_at: tomorrow + 2.hours,
+            summary: "Gusts up to 35mph",
+            icon: "arrow-up"
+          )
+        ] do
+          result = DeviceContent.new.call(home_assistant_api: api, include_wind: false)
+          all_periodic = result[:day_groups].flat_map { |d| d[:periodic] }
+          assert all_periodic.none? { |e| e[:summary]&.include?("Gusts") }
+        end
+      end
+    end
+  end
+
+  def test_include_wind_true_includes_wind_events
+    travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
+      api = new_test_api
+      tomorrow = DateTime.new(2023, 8, 28, 14, 0, 0, "-0600")
+      api.stub :weather_healthy?, true do
+        api.stub :wind_calendar_events, [
+          DeviceEvent.new(
+            id: "#{tomorrow.to_i}_ha_wind",
+            starts_at: tomorrow,
+            ends_at: tomorrow + 2.hours,
+            summary: "Gusts up to 35mph",
+            icon: "arrow-up"
+          )
+        ] do
+          result = DeviceContent.new.call(home_assistant_api: api, include_wind: true)
+          all_periodic = result[:day_groups].flat_map { |d| d[:periodic] }
+          assert all_periodic.any? { |e| e[:summary]&.include?("Gusts") }
+        end
+      end
+    end
+  end
 end
