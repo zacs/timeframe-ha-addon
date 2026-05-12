@@ -12,6 +12,7 @@ class Device < ActiveRecord::Base
     "trmnl_og" => {name: "TRMNL (OG)", template: "trmnl", width: 800, height: 480, templates: [{name: "trmnl", label: "Landscape Timeline"}, {name: "three_day", label: "3-Day"}, {name: "two_day", label: "2-Day Portrait"}], screenshotted: true},
     "reterminal_e1001" => {name: "reTerminal E1001 7.5\"", template: "trmnl", width: 800, height: 480, templates: [{name: "trmnl", label: "Landscape Timeline"}, {name: "three_day", label: "3-Day"}, {name: "two_day", label: "2-Day Portrait"}], screenshotted: true},
     "reterminal_e1003" => {name: "reTerminal E1003 10.3\"", template: "reterminal", width: 1404, height: 1872, screenshotted: true},
+    "trmnl_x" => {name: "TRMNL (X)", template: "reterminal", width: 1404, height: 1872, screenshotted: true},
     "display_1080p" => {name: "1080p Display", template: "eight_day", width: 1920, height: 1080, realtime: true}
   }.freeze
 
@@ -71,6 +72,10 @@ class Device < ActiveRecord::Base
 
   def reterminal_e1003?
     model == "reterminal_e1003"
+  end
+
+  def trmnl_x?
+    model == "trmnl_x"
   end
 
   def screenshotted?
@@ -186,7 +191,7 @@ class Device < ActiveRecord::Base
         width: display_width, height: display_height,
         raw: true
       )
-    elsif reterminal_e1003?
+    elsif reterminal_e1003? || trmnl_x?
       ScreenshotService.capture(
         url,
         width: display_width, height: display_height,

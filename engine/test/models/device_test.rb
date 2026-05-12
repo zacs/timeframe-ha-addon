@@ -274,6 +274,7 @@ class DeviceTest < Minitest::Test
     assert_includes Device::SCREENSHOTTED_MODELS, "trmnl_og"
     assert_includes Device::SCREENSHOTTED_MODELS, "reterminal_e1001"
     assert_includes Device::SCREENSHOTTED_MODELS, "reterminal_e1003"
+    assert_includes Device::SCREENSHOTTED_MODELS, "trmnl_x"
     refute_includes Device::SCREENSHOTTED_MODELS, "display_1080p"
     refute_includes Device::SCREENSHOTTED_MODELS, "visionect_13"
     refute_includes Device::SCREENSHOTTED_MODELS, "boox_mira_pro"
@@ -310,7 +311,45 @@ class DeviceTest < Minitest::Test
     device = Device.new(name: "test", model: "reterminal_e1003")
     assert device.reterminal_e1003?
     refute device.trmnl?
+    refute device.trmnl_x?
     refute device.visionect?
+  end
+
+  def test_trmnl_x_predicate
+    device = Device.new(name: "test", model: "trmnl_x")
+    assert device.trmnl_x?
+    refute device.reterminal_e1003?
+    refute device.trmnl?
+    refute device.visionect?
+  end
+
+  def test_trmnl_x_model_name_label
+    device = Device.new(name: "test", model: "trmnl_x")
+    assert_equal "TRMNL (X)", device.model_name_label
+  end
+
+  def test_trmnl_x_display_dimensions
+    device = Device.new(name: "test", model: "trmnl_x")
+    assert_equal 1404, device.display_width
+    assert_equal 1872, device.display_height
+  end
+
+  def test_trmnl_x_generates_api_key_and_friendly_id
+    device = Device.create!(
+      name: "test_trmnl_x_#{SecureRandom.hex(4)}",
+      model: "trmnl_x",
+      mac_address: "TX:#{SecureRandom.hex(4).scan(/../).join(":").upcase}"
+    )
+    assert device.api_key.present?
+    assert device.friendly_id.present?
+    assert device.confirmation_code.present?
+    refute device.confirmed?
+  end
+
+  def test_trmnl_x_requires_mac_address
+    device = Device.new(name: "test_tx_no_mac", model: "trmnl_x")
+    refute device.valid?
+    assert device.errors[:mac_address].any?
   end
 
   def test_reterminal_e1003_generates_api_key_and_friendly_id
