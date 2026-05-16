@@ -1,3 +1,28 @@
+## [2.11.0] - 2026-05-16
+
+### Added
+- TRMNL X device support
+- Clothing forecast (shorts/pants recommendation based on morning temperature)
+- "Show all events" option on three-day template
+- Weather event times and precipitation/wind ranges shown on three-day template
+
+### Changed
+- Three-day template layout: events rendered in a table with times, word-wrap instead of truncation
+- Two-day template changed from "2-Day Portrait" to "2-Day" landscape layout
+- Daily events now use timezone-aware day boundaries
+- `DeviceEvent#all_day?` uses local timezone for midnight checks
+
+### Fixed
+- Hourly weather events not rendering when HA reports timestamps with `+00:00` instead of `Z` (e.g. Met.no)
+- Precipitation events skipped when integration omits `precipitation_probability` (e.g. Met.no); now falls back to precipitation amount and condition
+- Wind events skipped when integration omits `wind_gust_speed` (e.g. Met.no); now falls back to `wind_speed`
+- Calendar events with blank UIDs now get a deterministic fallback ID
+- Timezone handling for daily event start/end times
+- Duplicate icon/label pairs in sensor displays
+- Expiring pairing codes
+- Setup flow compatibility issues
+- Performance loading in production
+
 ## [2.10.0] - 2026-05-05
 
 ### Added
