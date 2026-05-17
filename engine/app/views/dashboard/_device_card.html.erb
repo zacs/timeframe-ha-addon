@@ -103,11 +103,20 @@
             </li>
             <li>
               <%= form_with url: update_configuration_account_location_device_path(account, location, device), method: :patch do %>
+                <input type="hidden" name="key" value="show_icons">
+                <input type="hidden" name="value" value="<%= device.configuration&.dig("show_icons") == "false" ? "true" : "false" %>">
+                <%= submit_tag(device.configuration&.dig("show_icons") == "false" ? "Show Icons" : "Hide Icons", class: "dropdown-item", style: "border: none; background: none; width: 100%; text-align: left; cursor: pointer;") %>
+              <% end %>
+            </li>
+            <% if device.configuration&.dig("show_icons") != "false" %>
+            <li>
+              <%= form_with url: update_configuration_account_location_device_path(account, location, device), method: :patch do %>
                 <input type="hidden" name="key" value="auto_assign_icons">
                 <input type="hidden" name="value" value="<%= device.configuration&.dig("auto_assign_icons") == "false" ? "true" : "false" %>">
                 <%= submit_tag(device.configuration&.dig("auto_assign_icons") == "false" ? "Enable Auto Icons" : "Disable Auto Icons", class: "dropdown-item", style: "border: none; background: none; width: 100%; text-align: left; cursor: pointer;") %>
               <% end %>
             </li>
+            <% end %>
             <li><hr class="dropdown-divider"></li>
           <% end %>
           <% if device.active_template == "two_day" %>
