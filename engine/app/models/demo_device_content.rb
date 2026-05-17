@@ -3,7 +3,7 @@
 class DemoDeviceContent
   def call(timezone: "UTC", current_time: nil, days: 5, include_precip: true, include_wind: true,
     use_day_names: false, include_daily_weather: true, weather_row: false, start_time_only: false,
-    always_show_today: false, start_offset: 0, clothing_forecast: false)
+    always_show_today: false, start_offset: 0, clothing_forecast: false, auto_icons: false)
     current_time ||= Time.now.utc.in_time_zone(timezone)
 
     out = {}
@@ -59,6 +59,20 @@ class DemoDeviceContent
 
     out[:day_groups] = build_day_groups(current_time, timezone, days: days, include_wind: include_wind,
       use_day_names: use_day_names, weather_row: weather_row, start_offset: start_offset, clothing_forecast: clothing_forecast)
+
+    if auto_icons
+      out[:day_groups].each do |day|
+        (day[:daily] + day[:periodic]).each do |event|
+          next if event[:kids_icon]
+          matched = MdiIconMatcher.match(event[:summary])
+          if matched
+            event[:icon_class] = matched
+            event[:icon_text] = nil
+          end
+        end
+      end
+    end
+
     out[:start_time_only] = start_time_only
 
     out

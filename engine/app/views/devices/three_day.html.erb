@@ -15,6 +15,7 @@
   .three-day-events td { padding: .15rem 0; }
   .three-day-events td:first-child { text-align: right; }
   .three-day-event-icon { width: 1rem; text-align: center; font-size: .85rem; font-weight: bold; }
+  .three-day-events td.three-day-event-icon { padding: .15rem .25rem; }
   .three-day-event-summary { overflow-wrap: break-word; word-wrap: break-word; }
   .three-day-clothing-icon { display: inline-block; width: 1em; height: 1em; vertical-align: middle; margin-left: .25em; }
   .three-day-clothing-icon-shorts { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80'%3E%3Cpath fill='%23000' d='m89.801 8.102-.402-7.703H10.601l-.402 7.703z'/%3E%3Cpath fill='%23000' d='m90.5 13.199h-81l-7 62.699c3.3.801 6.8 1.5 10.5 2.102 11.3 1.8 21.5 1.8 30.102 1.101 1.8-11 3.699-22 5.5-33h2.898c1.801 11 3.7 22 5.5 33 8.602.7 18.801.7 30.102-1.101 3.699-.602 7.199-1.301 10.5-2.102z'/%3E%3C/svg%3E") center/contain no-repeat; }
@@ -51,6 +52,19 @@
               <% daily_images.each do |event| %>
                 <tr>
                   <td style="white-space: nowrap; font-size: .85rem; padding: 0 .35rem 0 0; width: 1%;"></td>
+                  <td class="three-day-event-icon">
+                    <% if event[:kids_icon] %>
+                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
+                    <% elsif event[:icon_class] %>
+                      <% if event[:icon_style] %>
+                        <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
+                      <% else %>
+                        <i class="mdi mdi-<%= event[:icon_class] %>"></i>
+                      <% end %>
+                    <% elsif event[:icon_text] %>
+                      <%= event[:icon_text] %>
+                    <% end %>
+                  </td>
                   <td class="three-day-event-summary"><%= truncate(event[:summary], length: 30) %></td>
                 </tr>
               <% end %>
@@ -66,6 +80,19 @@
                       <% end %>
                     <% else %>
                       <%= event[:full_start_time] %>
+                    <% end %>
+                  </td>
+                  <td class="three-day-event-icon">
+                    <% if event[:kids_icon] %>
+                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
+                    <% elsif event[:icon_class] %>
+                      <% if event[:icon_style] %>
+                        <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
+                      <% else %>
+                        <i class="mdi mdi-<%= event[:icon_class] %>"></i>
+                      <% end %>
+                    <% elsif event[:icon_text] %>
+                      <%= event[:icon_text] %>
                     <% end %>
                   </td>
                   <td class="three-day-event-summary"><%= truncate(event[:summary], length: 30) %></td>

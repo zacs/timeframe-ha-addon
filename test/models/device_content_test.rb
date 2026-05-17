@@ -336,6 +336,28 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
+  def test_clothing_forecast_uses_morning_temp_when_noon_missing
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      weather_events = [
+        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "72°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "80°", icon: "weather-sunny", timezone: tz)
+      ]
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, weather_events do
+            result = DeviceContent.new.call(home_assistant_api: api, weather_row: true, clothing_forecast: true, always_show_today: true)
+
+            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+            # noon missing, so noon_temp falls back to morning_temp (72), which >= 65, so shorts
+            assert_equal "Shorts", today[:clothing][:summary]
+          end
+        end
+      end
+    end
+  end
+
   def test_clothing_forecast_celsius
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api(TimeframeConfig.new(temperature_unit: "C"))
@@ -374,6 +396,53 @@ class DeviceContenttTest < Minitest::Test
 
             today = result[:day_groups].find { |d| d[:day_name] == "Today" }
             assert_nil today[:clothing]
+          end
+        end
+      end
+    end
+  end
+
+  def test_auto_icons_assigns_icon_to_matching_events
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      events = [
+        DeviceEvent.new(id: "1", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church service", icon: "calendar", timezone: tz),
+        DeviceEvent.new(id: "2", starts_at: DateTime.new(2023, 8, 27, 11, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "Xyzzy gibberish", icon: "calendar", timezone: tz)
+      ]
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, events do
+            result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
+
+            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+            church_event = today[:periodic].find { |e| e[:summary] == "Church service" }
+            assert_equal "church", church_event[:icon_class]
+
+            no_match_event = today[:periodic].find { |e| e[:summary] == "Xyzzy gibberish" }
+            assert_equal "calendar", no_match_event[:icon_class], "Non-matching event should keep original icon"
+          end
+        end
+      end
+    end
+  end
+
+  def test_auto_icons_preserves_kids_icon
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      events = [
+        DeviceEvent.new(id: "1", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church", icon: "calendar", description: "timeframe-kids-icon:church", timezone: tz)
+      ]
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, events do
+            result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
+
+            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+            event = today[:periodic].find { |e| e[:summary] == "Church" }
+            assert_equal "church", event[:kids_icon]
+            assert_equal "calendar", event[:icon_class]
           end
         end
       end

@@ -1070,7 +1070,7 @@ class HomeAssistantApiTest < Minitest::Test
 
     api = HomeAssistantApi.new
     api.stub :hourly_forecast, [
-      {datetime: future_time, condition: "rainy", precipitation_probability: 20, precipitation: 1.0}
+      {datetime: future_time, condition: "rainy", precipitation_probability: 15, precipitation: 1.0}
     ] do
       assert_equal [], api.precip_calendar_events
     end
@@ -1081,7 +1081,7 @@ class HomeAssistantApiTest < Minitest::Test
 
     api = HomeAssistantApi.new
     api.stub :hourly_forecast, [
-      {datetime: future_time, condition: "rainy", precipitation_probability: 40, precipitation: 0.0}
+      {datetime: future_time, condition: "rainy", precipitation_probability: 30, precipitation: 0.0}
     ] do
       assert_equal [], api.precip_calendar_events
     end

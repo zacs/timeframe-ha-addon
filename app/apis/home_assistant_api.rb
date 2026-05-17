@@ -506,11 +506,11 @@ class HomeAssistantApi
     hours.each do |hour|
       prob = hour[:precipitation_probability]
       precip = hour[:precipitation].to_f
-      rainy_condition = %w[rainy pouring snowy snowy-rainy hail].include?(hour[:condition])
+      rainy_condition = %w[rainy pouring snowy snowy-rainy hail lightning lightning-rainy].include?(hour[:condition])
 
       next if precip == 0.0 && !rainy_condition
-      next if prob.present? && prob.to_i < 30
-      next if prob.present? && precip == 0.0 && prob.to_i < 50
+      next if prob.present? && prob.to_i < 20
+      next if prob.present? && precip == 0.0 && prob.to_i < 40
 
       hour_i = DateTime.parse(hour[:datetime]).to_i
       next if hour_i < Time.now.to_i

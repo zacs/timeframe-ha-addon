@@ -236,4 +236,15 @@ class DemoDeviceContentTest < Minitest::Test
       assert %w[shorts pants].include?(today[:clothing][:icon])
     end
   end
+
+  def test_auto_icons
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = DemoDeviceContent.new.call(timezone: "America/Chicago", auto_icons: true, always_show_today: true)
+
+      all_events = result[:day_groups].flat_map { |d| d[:daily] + d[:periodic] }
+      non_weather = all_events.reject { |e| e[:weather_ranged] }
+      icons_assigned = non_weather.select { |e| e[:icon_class] || e[:kids_icon] }
+      assert icons_assigned.any?, "Expected at least one event to have an auto-assigned icon"
+    end
+  end
 end

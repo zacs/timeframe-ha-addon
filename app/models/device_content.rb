@@ -14,7 +14,8 @@ class DeviceContent
     start_time_only: false,
     always_show_today: false,
     start_offset: 0,
-    clothing_forecast: false
+    clothing_forecast: false,
+    auto_icons: false
   )
     current_time ||= Time.now.utc.in_time_zone(home_assistant_api.time_zone)
 
@@ -147,6 +148,19 @@ class DeviceContent
           clothing: clothing_data
         }
       end.compact
+
+    if auto_icons
+      out[:day_groups].each do |day|
+        (day[:daily] + day[:periodic]).each do |event|
+          next if event[:kids_icon]
+          matched = MdiIconMatcher.match(event[:summary])
+          if matched
+            event[:icon_class] = matched
+            event[:icon_text] = nil
+          end
+        end
+      end
+    end
 
     out[:start_time_only] = start_time_only
 
