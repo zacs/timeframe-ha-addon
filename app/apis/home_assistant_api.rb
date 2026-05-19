@@ -198,11 +198,17 @@ class HomeAssistantApi
     config_data[:unit_system] || {}
   end
 
+  HA_SPEED_UNITS = {
+    "km/h" => "kph",
+    "m/s" => "m/s",
+    "mi/h" => "mph",
+    "kn" => "kn",
+    "ft/s" => "ft/s",
+    "Beaufort" => "Beaufort"
+  }.freeze
+
   def ha_speed_unit
-    case unit_system[:wind_speed]
-    when "km/h" then "kph"
-    else "mph"
-    end
+    HA_SPEED_UNITS[unit_system[:wind_speed]] || "mph"
   end
 
   def ha_temperature_unit
@@ -368,15 +374,26 @@ class HomeAssistantApi
     @config.temperature_unit
   end
 
+  # Conversion factors to mph (base unit for internal conversion)
+  SPEED_TO_MPH = {
+    "mph" => 1.0,
+    "kph" => 0.621371,
+    "m/s" => 2.23694,
+    "kn" => 1.15078,
+    "ft/s" => 0.681818
+  }.freeze
+
   def convert_speed(value)
     ha_unit = ha_speed_unit
     return value.to_f if ha_unit == speed_unit
 
-    if ha_unit == "kph" && speed_unit == "mph"
-      value.to_f * 0.621371
+    mph_value = if ha_unit == "Beaufort"
+      # Beaufort scale is non-linear: v(m/s) = 0.836 * B^1.5
+      0.836 * value.to_f**1.5 * SPEED_TO_MPH["m/s"]
     else
-      value.to_f * 1.60934
+      value.to_f * SPEED_TO_MPH.fetch(ha_unit, 1.0)
     end
+    mph_value / SPEED_TO_MPH.fetch(speed_unit, 1.0)
   end
 
   def convert_temperature(value)

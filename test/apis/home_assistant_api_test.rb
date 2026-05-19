@@ -1421,6 +1421,126 @@ class HomeAssistantApiTest < Minitest::Test
     end
   end
 
+  def test_convert_speed_ms_to_kph
+    future_time = (Time.now + 1.hour).utc.beginning_of_hour.iso8601
+
+    config = TimeframeConfig.new(speed_unit: "kph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "m/s", accumulated_precipitation: "mm"})
+    api.stub :hourly_forecast, [
+      {datetime: future_time, wind_gust_speed: 15.0, wind_bearing: 180}
+    ] do
+      events = api.wind_calendar_events
+      assert_equal 1, events.length
+      assert_includes events.first.summary, "54kph"
+    end
+  end
+
+  def test_convert_speed_ms_to_mph
+    future_time = (Time.now + 1.hour).utc.beginning_of_hour.iso8601
+
+    config = TimeframeConfig.new(speed_unit: "mph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "m/s", accumulated_precipitation: "mm"})
+    api.stub :hourly_forecast, [
+      {datetime: future_time, wind_gust_speed: 15.0, wind_bearing: 180}
+    ] do
+      events = api.wind_calendar_events
+      assert_equal 1, events.length
+      assert_includes events.first.summary, "34mph"
+    end
+  end
+
+  def test_ha_speed_unit_ms
+    api = HomeAssistantApi.new
+    api.stub :config_data, {unit_system: {wind_speed: "m/s"}} do
+      assert_equal "m/s", api.ha_speed_unit
+    end
+  end
+
+  def test_convert_speed_no_double_conversion_kph_to_kph
+    config = TimeframeConfig.new(speed_unit: "kph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "km/h", accumulated_precipitation: "mm"})
+    assert_equal 25.0, api.convert_speed(25.0)
+  end
+
+  def test_ha_speed_unit_knots
+    api = HomeAssistantApi.new
+    api.stub :config_data, {unit_system: {wind_speed: "kn"}} do
+      assert_equal "kn", api.ha_speed_unit
+    end
+  end
+
+  def test_ha_speed_unit_ft_s
+    api = HomeAssistantApi.new
+    api.stub :config_data, {unit_system: {wind_speed: "ft/s"}} do
+      assert_equal "ft/s", api.ha_speed_unit
+    end
+  end
+
+  def test_ha_speed_unit_mi_h
+    api = HomeAssistantApi.new
+    api.stub :config_data, {unit_system: {wind_speed: "mi/h"}} do
+      assert_equal "mph", api.ha_speed_unit
+    end
+  end
+
+  def test_ha_speed_unit_beaufort
+    api = HomeAssistantApi.new
+    api.stub :config_data, {unit_system: {wind_speed: "Beaufort"}} do
+      assert_equal "Beaufort", api.ha_speed_unit
+    end
+  end
+
+  def test_convert_speed_knots_to_mph
+    future_time = (Time.now + 1.hour).utc.beginning_of_hour.iso8601
+
+    config = TimeframeConfig.new(speed_unit: "mph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "kn", accumulated_precipitation: "mm"})
+    api.stub :hourly_forecast, [
+      {datetime: future_time, wind_gust_speed: 25.0, wind_bearing: 180}
+    ] do
+      events = api.wind_calendar_events
+      assert_equal 1, events.length
+      # 25 kn * 1.15078 = 28.77 mph
+      assert_includes events.first.summary, "29mph"
+    end
+  end
+
+  def test_convert_speed_ft_s_to_kph
+    future_time = (Time.now + 1.hour).utc.beginning_of_hour.iso8601
+
+    config = TimeframeConfig.new(speed_unit: "kph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "ft/s", accumulated_precipitation: "mm"})
+    api.stub :hourly_forecast, [
+      {datetime: future_time, wind_gust_speed: 50.0, wind_bearing: 180}
+    ] do
+      events = api.wind_calendar_events
+      assert_equal 1, events.length
+      # 50 ft/s * 0.681818 = 34.09 mph / 0.621371 = 54.87 kph
+      assert_includes events.first.summary, "55kph"
+    end
+  end
+
+  def test_convert_speed_beaufort_to_mph
+    future_time = (Time.now + 1.hour).utc.beginning_of_hour.iso8601
+
+    config = TimeframeConfig.new(speed_unit: "mph")
+    api = new_test_api(config)
+    api.seed_config(time_zone: "America/Chicago", unit_system: {temperature: "°C", wind_speed: "Beaufort", accumulated_precipitation: "mm"})
+    api.stub :hourly_forecast, [
+      {datetime: future_time, wind_gust_speed: 7.0, wind_bearing: 180}
+    ] do
+      events = api.wind_calendar_events
+      assert_equal 1, events.length
+      # Beaufort 7: 0.836 * 7^1.5 = 15.48 m/s * 2.23694 = 34.63 mph
+      assert_includes events.first.summary, "35mph"
+    end
+  end
+
   def test_convert_temperature_same_unit
     api = HomeAssistantApi.new
     api.stub :daily_forecast, [
