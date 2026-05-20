@@ -151,8 +151,8 @@ class DeviceContent
           day_name: day_name,
           date: date.to_date,
           show_daily: show_daily,
-          daily: events[:daily].map { |e| e.as_json(date: date.to_date) },
-          periodic: periodic_events.map { |e| e.as_json(date: date.to_date) },
+          daily: events[:daily].reject(&:banner?).map { |e| e.as_json(date: date.to_date) },
+          periodic: periodic_events.reject(&:banner?).map { |e| e.as_json(date: date.to_date) },
           weather_row: weather_row_data,
           clothing: clothing_data
         }

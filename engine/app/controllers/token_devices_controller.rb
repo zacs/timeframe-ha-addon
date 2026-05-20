@@ -24,7 +24,7 @@ class TokenDevicesController < ApplicationController
 
     view_object = @device.device_content
     view_object[:configuration] = @device.try(:configuration) || {}
-    @banner = view_object[:banner]
+    @banner = view_object[:banner] unless template == "mira"
 
     component = DevicesController::TEMPLATE_COMPONENTS[template].constantize.new(view_object: view_object)
     render component, layout: params[:layout] != "false"

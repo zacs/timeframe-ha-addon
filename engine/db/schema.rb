@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 8) do
+ActiveRecord::Schema[8.1].define(version: 9) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -232,16 +232,27 @@ ActiveRecord::Schema[8.1].define(version: 8) do
     t.index ["account_id"], name: "index_google_accounts_on_account_id"
   end
 
+  create_table "ha_syncs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "entities", default: {}, null: false
+    t.bigint "location_id", null: false
+    t.datetime "synced_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["location_id"], name: "index_ha_syncs_on_location_id", unique: true
+  end
+
   create_table "locations", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "country_code", limit: 2
     t.datetime "created_at", null: false
+    t.text "ha_sync_api_key"
     t.text "latitude", null: false
     t.text "longitude", null: false
     t.text "name", null: false
     t.string "time_zone", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_locations_on_account_id"
+    t.index ["ha_sync_api_key"], name: "index_locations_on_ha_sync_api_key", unique: true
   end
 
   create_table "microsoft_accounts", force: :cascade do |t|
@@ -304,6 +315,7 @@ ActiveRecord::Schema[8.1].define(version: 8) do
   add_foreign_key "calendars", "microsoft_accounts"
   add_foreign_key "devices", "locations"
   add_foreign_key "google_accounts", "accounts"
+  add_foreign_key "ha_syncs", "locations"
   add_foreign_key "locations", "accounts"
   add_foreign_key "microsoft_accounts", "accounts"
   add_foreign_key "pending_devices", "devices", column: "claimed_device_id"

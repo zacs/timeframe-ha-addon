@@ -43,6 +43,20 @@ A calendar event with the description `timeframe-private` will activate private 
 
 To hide a specific event, include `timeframe-omit` in the description.
 
+### Banner mode
+
+To display a full-width banner at the bottom of the screen, include `timeframe-banner` or `#banner` in a calendar event's description. The banner appears while the event is active (between its start and end times).
+
+- The event **title** becomes the banner heading.
+- The rest of the **description** (after removing the tag) becomes the banner body. Basic HTML formatting (`<b>`, `<i>`, `<u>`, `<s>`) is supported; plain-text newlines are converted to line breaks.
+
+**Example:** Create a calendar event titled "School Closed Today" with the description:
+
+```
+#banner
+Due to inclement weather, <b>all schools</b> will be closed today. Stay safe!
+```
+
 ## Local development
 
 ### Configuration:

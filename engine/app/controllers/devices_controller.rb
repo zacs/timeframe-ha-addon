@@ -32,7 +32,7 @@ class DevicesController < ApplicationController
 
     view_object = @device.device_content
     view_object[:configuration] = @device.try(:configuration) || {}
-    @banner = view_object[:banner]
+    @banner = view_object[:banner] unless template == "mira"
 
     component = build_device_component(template, view_object, refresh: refresh, device: @device)
     render component, layout: params[:layout] != "false"
@@ -51,7 +51,7 @@ class DevicesController < ApplicationController
     template = device.active_template
     view_object = device.device_content(current_time: current_time)
     view_object[:configuration] = device.try(:configuration) || {}
-    @banner = view_object[:banner]
+    @banner = view_object[:banner] unless template == "mira"
 
     component = build_device_component(template, view_object)
     render component, layout: "device"
