@@ -9,6 +9,10 @@ class User < ActiveRecord::Base
   validates :email, presence: true, uniqueness: true, format: {with: URI::MailTo::EMAIL_REGEXP}
   validate :email_must_not_contain_plus
 
+  def is_admin?
+    false
+  end
+
   private
 
   def email_must_not_contain_plus

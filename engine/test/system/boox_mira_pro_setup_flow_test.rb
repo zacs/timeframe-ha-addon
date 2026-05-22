@@ -48,7 +48,9 @@ class BooxMiraProSetupFlowTest < ApplicationSystemTestCase
     within(card) do
       click_link "Configure"
     end
-    find("label", text: "Demo Mode").sibling("button").click
+    within(first(".form-check", text: "Demo Mode")) do
+      find("input[type='checkbox'][role='switch']").check
+    end
 
     device.reload
     assert device.demo_mode_enabled?, "Device should be in demo mode"

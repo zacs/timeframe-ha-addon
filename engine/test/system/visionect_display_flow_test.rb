@@ -38,7 +38,9 @@ class VisionectDisplayFlowTest < ApplicationSystemTestCase
     within(card) do
       click_link "Configure"
     end
-    find("label", text: "Demo Mode").sibling("button").click
+    within(first(".form-check", text: "Demo Mode")) do
+      find("input[type='checkbox'][role='switch']").check
+    end
 
     # Should redirect back, device now in demo mode
     device.reload

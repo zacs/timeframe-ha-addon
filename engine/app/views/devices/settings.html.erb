@@ -177,9 +177,9 @@
               <input type="hidden" name="value" value="<%= new_value %>">
               <div class="form-check form-switch mb-2">
                 <% if is_on %>
-                  <button type="submit" class="form-check-input" role="switch" style="cursor: pointer;" checked></button>
+                  <input type="checkbox" class="form-check-input" role="switch" style="cursor: pointer;" checked onchange="this.form.submit()">
                 <% else %>
-                  <button type="submit" class="form-check-input" role="switch" style="cursor: pointer;"></button>
+                  <input type="checkbox" class="form-check-input" role="switch" style="cursor: pointer;" onchange="this.form.submit()">
                 <% end %>
                 <label class="form-check-label"><%= opt[:on_label] %></label>
               </div>
@@ -208,9 +208,9 @@
         <%= form_with url: account_location_device_path(@account, @location, @device), method: :patch do %>
           <div class="form-check form-switch">
             <% if @device.demo_mode_enabled? %>
-              <button type="submit" class="form-check-input" role="switch" style="cursor: pointer;" checked></button>
+              <input type="checkbox" class="form-check-input" role="switch" style="cursor: pointer;" checked onchange="this.form.submit()">
             <% else %>
-              <button type="submit" class="form-check-input" role="switch" style="cursor: pointer;"></button>
+              <input type="checkbox" class="form-check-input" role="switch" style="cursor: pointer;" onchange="this.form.submit()">
             <% end %>
             <label class="form-check-label">Demo Mode</label>
           </div>

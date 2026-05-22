@@ -29,6 +29,11 @@ class MdiIconMatcherTest < Minitest::Test
     assert_equal "cart", MdiIconMatcher.match("Grocery pickup")
   end
 
+  def test_match_climbing_and_mountain_custom_mapping
+    assert_equal "image-filter-hdr", MdiIconMatcher.match("Rock climbing")
+    assert_equal "image-filter-hdr", MdiIconMatcher.match("Mountain summit")
+  end
+
   # Exact icon name match (not via custom mapping)
 
   def test_match_exact_icon_name

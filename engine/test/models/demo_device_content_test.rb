@@ -247,4 +247,14 @@ class DemoDeviceContentTest < Minitest::Test
       assert icons_assigned.any?, "Expected at least one event to have an auto-assigned icon"
     end
   end
+
+  def test_auto_icons_skips_weather_events
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = DemoDeviceContent.new.call(timezone: "America/Chicago", auto_icons: true, always_show_today: true)
+
+      weather_event = result[:day_groups][0][:periodic].find { |e| e[:summary] == "58°" }
+      assert weather_event, "Expected a demo weather event"
+      assert_equal "weather-partly-cloudy", weather_event[:icon_class]
+    end
+  end
 end

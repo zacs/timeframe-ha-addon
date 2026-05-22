@@ -240,6 +240,7 @@ class DeviceEvent
       full_time: full_time,
       full_start_time: full_start_time,
       weather_ranged: weather_ranged?,
+      weather: weather?,
       attachment_image: attachment_image,
       kids_icon: kids_icon,
       precip: precip,
