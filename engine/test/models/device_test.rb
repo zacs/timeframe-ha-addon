@@ -375,6 +375,30 @@ class DeviceTest < Minitest::Test
     assert_equal "three_day", device.active_template
   end
 
+  def test_two_day_show_weather_events_false_keeps_clothing_forecast
+    device = Device.create!(
+      location: test_location,
+      name: "test_two_day_weather_#{SecureRandom.hex(4)}",
+      model: "trmnl_og",
+      mac_address: "TW:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
+      display_template: "two_day",
+      demo_mode_enabled: true,
+      configuration: {
+        "show_all_events" => "true",
+        "show_weather_events" => "false",
+        "clothing_forecast" => "true"
+      }
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 8)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    assert_equal 2, result[:day_groups].length
+    assert result[:day_groups].first[:weather_row].any?, "Expected hourly weather to remain available"
+    assert result[:day_groups].first[:clothing], "Expected clothing forecast to remain available"
+    assert result[:day_groups].flat_map { |day| day[:periodic] }.none? { |event| event[:summary]&.include?("Gusts") }
+  end
+
   def test_destroying_device_destroys_associated_pending_device
     device = Device.create!(location: test_location, name: "test_destroy_pending", model: "trmnl_og",
       mac_address: "DE:ST:RO:YP:EN:D1", confirmed_at: Time.current)

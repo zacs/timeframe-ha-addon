@@ -142,6 +142,8 @@ class Device < ActiveRecord::Base
     two_day = active_template == "two_day"
     eight_day = active_template == "eight_day"
     show_all = configuration&.dig("show_all_events") == "true"
+    show_weather_events = !two_day || configuration&.dig("show_weather_events") != "false"
+    include_weather_events = (!compact_view && !eight_day) || (show_all && show_weather_events)
     args = {
       days:
         if two_day
@@ -152,7 +154,9 @@ class Device < ActiveRecord::Base
           (compact_view ? 3 : 5)
         end,
       start_offset: eight_day ? -1 : 0,
-      include_precip: !compact_view && !eight_day || show_all, include_wind: !compact_view && !eight_day || show_all,
+      include_precip: include_weather_events,
+      include_wind: include_weather_events,
+      include_weather_alerts: include_weather_events,
       use_day_names: compact_view || eight_day, include_daily_weather: !compact_view && !eight_day,
       weather_row: compact_view || eight_day, start_time_only: compact_view || eight_day,
       always_show_today: compact_view || eight_day,

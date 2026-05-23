@@ -290,6 +290,61 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
+  def test_clothing_forecast_works_when_periodic_weather_events_are_hidden
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      current_time = ActiveSupport::TimeZone[tz].local(2023, 8, 27, 7)
+      hourly_events = [
+        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: current_time.change(hour: 8), ends_at: current_time.change(hour: 8), summary: "72°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: current_time.change(hour: 12), ends_at: current_time.change(hour: 12), summary: "85°", icon: "weather-sunny", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: current_time.change(hour: 16), ends_at: current_time.change(hour: 16), summary: "80°", icon: "weather-sunny", timezone: tz)
+      ]
+      precip_event = DeviceEvent.new(
+        id: "#{current_time.change(hour: 14).to_i}_ha_precip",
+        starts_at: current_time.change(hour: 14),
+        ends_at: current_time.change(hour: 16),
+        summary: "Rain 0.5\"",
+        icon: "weather-rainy",
+        timezone: tz
+      )
+      wind_event = DeviceEvent.new(
+        id: "#{current_time.change(hour: 15).to_i}_ha_wind",
+        starts_at: current_time.change(hour: 15),
+        ends_at: current_time.change(hour: 17),
+        summary: "Gusts up to 35mph",
+        icon: "arrow-up",
+        timezone: tz
+      )
+
+      api.stub :weather_healthy?, true do
+        api.stub :hourly_calendar_events, hourly_events do
+          api.stub :daily_calendar_events, [] do
+            api.stub :precip_calendar_events, [precip_event] do
+              api.stub :wind_calendar_events, [wind_event] do
+                result = DeviceContent.new.call(
+                  home_assistant_api: api,
+                  current_time: current_time,
+                  days: 1,
+                  weather_row: true,
+                  clothing_forecast: true,
+                  always_show_today: true,
+                  include_precip: false,
+                  include_wind: false
+                )
+
+                today = result[:day_groups].first
+                assert_equal "Shorts", today[:clothing][:summary]
+                assert today[:weather_row].any?
+                assert today[:periodic].none? { |e| e[:summary]&.include?("Rain") || e[:summary]&.include?("Gusts") }
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
   def test_clothing_forecast_shorts_when_warm
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api

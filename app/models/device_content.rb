@@ -8,6 +8,7 @@ class DeviceContent
     days: 5,
     include_precip: true,
     include_wind: true,
+    include_weather_alerts: true,
     use_day_names: false,
     include_daily_weather: true,
     weather_row: false,
