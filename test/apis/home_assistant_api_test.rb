@@ -77,6 +77,14 @@ class HomeAssistantApiTest < Minitest::Test
     end
   end
 
+  def test_config_data_fetches_when_cache_is_empty
+    api = HomeAssistantApi.new(TimeframeConfig.new, store: ActiveSupport::Cache::MemoryStore.new)
+
+    api.stub :fetch_config, -> { api.seed_config(DEFAULT_TEST_CONFIG) } do
+      assert_equal "America/Chicago", api.config_data[:time_zone]
+    end
+  end
+
   # --- States ---
 
   def test_feels_like_temperature_no_data
@@ -746,6 +754,28 @@ class HomeAssistantApiTest < Minitest::Test
     end
   end
 
+  def test_fetch_calendars_builds_stable_id_when_uid_is_missing
+    api = new_test_api
+    calendar = {"entity_id" => "calendar.family"}
+    event = {
+      "summary" => "Dentist",
+      "start" => {"dateTime" => "2024-09-05T10:00:00-06:00"},
+      "end" => {"dateTime" => "2024-09-05T11:00:00-06:00"}
+    }
+
+    api.stub :fetch_calendar_list, [calendar] do
+      api.stub :fetch_calendar_icons, {} do
+        HTTParty.stub :get, [event] do
+          api.fetch_calendars
+        end
+      end
+    end
+
+    fetched = api.calendar_events.first
+    assert fetched.id.start_with?("calendar.family_2024-09-05T10:00:00-06:00_")
+    assert_equal "calendar", fetched.icon
+  end
+
   def test_private_mode
     api = new_test_api
     api.seed_calendars([])
@@ -963,6 +993,19 @@ class HomeAssistantApiTest < Minitest::Test
     end
   end
 
+  def test_daily_calendar_events_with_rain_precip_metric
+    config = TimeframeConfig.new(precipitation_unit: "mm")
+    api = HomeAssistantApi.new(config)
+    api.stub :daily_forecast, [
+      {datetime: "2023-08-27T06:00:00Z", condition: "cloudy", temperature: 10, templow: 5, precipitation: 10.0}
+    ] do
+      events = api.daily_calendar_events
+      assert_equal 1, events.first.precip.length
+      assert_equal "weather-rainy", events.first.precip.first[:icon]
+      assert_includes events.first.precip.first[:label], "mm"
+    end
+  end
+
   def test_daily_calendar_events_no_precip_when_zero
     api = HomeAssistantApi.new
     api.stub :daily_forecast, [
@@ -997,6 +1040,22 @@ class HomeAssistantApiTest < Minitest::Test
       ] do
         events = api.daily_calendar_events
         assert_equal 1, events.length
+        assert_equal "35mph", events.first.wind_gust
+      end
+    end
+  end
+
+  def test_daily_calendar_events_keeps_highest_wind_gust
+    tomorrow = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 20)
+    api = HomeAssistantApi.new
+    api.stub :daily_forecast, [
+      {datetime: tomorrow.iso8601, condition: "sunny", temperature: 75, templow: 55}
+    ] do
+      api.stub :hourly_forecast, [
+        {datetime: (tomorrow + 10.hours).iso8601, wind_gust_speed: 35},
+        {datetime: (tomorrow + 12.hours).iso8601, wind_gust_speed: 25}
+      ] do
+        events = api.daily_calendar_events
         assert_equal "35mph", events.first.wind_gust
       end
     end
