@@ -399,6 +399,75 @@ class DeviceTest < Minitest::Test
     assert result[:day_groups].flat_map { |day| day[:periodic] }.none? { |event| event[:summary]&.include?("Gusts") }
   end
 
+  def test_two_day_uses_today_and_tomorrow_before_default_rollover_time
+    device = Device.create!(
+      location: test_location,
+      name: "test_two_day_rollover_before_#{SecureRandom.hex(4)}",
+      model: "trmnl_og",
+      mac_address: "RB:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
+      display_template: "two_day",
+      demo_mode_enabled: true
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 17, 59)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    assert_equal [Date.new(2026, 3, 19), Date.new(2026, 3, 20)], result[:day_groups].map { |day| day[:date] }
+  end
+
+  def test_two_day_rollover_is_disabled_by_default
+    device = Device.create!(
+      location: test_location,
+      name: "test_two_day_rollover_disabled_#{SecureRandom.hex(4)}",
+      model: "trmnl_og",
+      mac_address: "RD:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
+      display_template: "two_day",
+      demo_mode_enabled: true
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 18)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    assert_equal [Date.new(2026, 3, 19), Date.new(2026, 3, 20)], result[:day_groups].map { |day| day[:date] }
+  end
+
+  def test_two_day_uses_tomorrow_and_following_day_at_default_rollover_time
+    device = Device.create!(
+      location: test_location,
+      name: "test_two_day_rollover_after_#{SecureRandom.hex(4)}",
+      model: "trmnl_og",
+      mac_address: "RA:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
+      display_template: "two_day",
+      demo_mode_enabled: true,
+      configuration: {"two_day_rollover_enabled" => "true"}
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 18)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    assert_equal [Date.new(2026, 3, 20), Date.new(2026, 3, 21)], result[:day_groups].map { |day| day[:date] }
+  end
+
+  def test_two_day_rollover_time_can_be_configured
+    device = Device.create!(
+      location: test_location,
+      name: "test_two_day_rollover_custom_#{SecureRandom.hex(4)}",
+      model: "trmnl_og",
+      mac_address: "RC:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
+      display_template: "two_day",
+      demo_mode_enabled: true,
+      configuration: {
+        "two_day_rollover_enabled" => "true",
+        "two_day_rollover_time" => "20:30"
+      }
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 19)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    assert_equal [Date.new(2026, 3, 19), Date.new(2026, 3, 20)], result[:day_groups].map { |day| day[:date] }
+  end
+
   def test_three_day_show_weather_events_false_keeps_clothing_forecast
     device = Device.create!(
       location: test_location,

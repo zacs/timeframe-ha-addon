@@ -4,6 +4,7 @@ class Device < ActiveRecord::Base
   include Rails.application.routes.url_helpers
 
   REFRESH_RATE_SECONDS = 900
+  TWO_DAY_DEFAULT_ROLLOVER_TIME = "18:00"
 
   SUPPORTED_MODELS = {
     "visionect_13" => {name: "Visionect Place & Play 13\"", template: "thirteen", width: 1200, height: 1600},
@@ -144,6 +145,7 @@ class Device < ActiveRecord::Base
     show_all = configuration&.dig("show_all_events") == "true"
     show_weather_events = !compact_view || configuration&.dig("show_weather_events") != "false"
     include_weather_events = (!compact_view && !eight_day) || (show_all && show_weather_events)
+    effective_current_time = current_time || Time.now.utc.in_time_zone(tz)
     args = {
       days:
         if two_day
@@ -153,7 +155,14 @@ class Device < ActiveRecord::Base
         else
           (compact_view ? 3 : 5)
         end,
-      start_offset: eight_day ? -1 : 0,
+      start_offset:
+        if eight_day
+          -1
+        elsif two_day
+          two_day_start_offset(effective_current_time, timezone: tz)
+        else
+          0
+        end,
       include_precip: include_weather_events,
       include_wind: include_weather_events,
       include_weather_alerts: include_weather_events,
@@ -169,6 +178,30 @@ class Device < ActiveRecord::Base
     else
       DeviceContent.new.call(device: self, timezone: tz, **args)
     end
+  end
+
+  def two_day_start_offset(current_time, timezone: nil)
+    return 0 unless active_template == "two_day"
+    return 0 unless configuration&.dig("two_day_rollover_enabled") == "true"
+
+    display_time = current_time.in_time_zone(timezone || location&.time_zone || "UTC")
+    current_minutes = (display_time.hour * 60) + display_time.min
+    if current_minutes >= self.class.time_string_to_minutes(configuration&.dig("two_day_rollover_time"))
+      1
+    else
+      0
+    end
+  end
+
+  def self.time_string_to_minutes(value)
+    match = value.to_s.match(/\A(\d{1,2}):(\d{2})\z/)
+    return time_string_to_minutes(TWO_DAY_DEFAULT_ROLLOVER_TIME) unless match
+
+    hour = match[1].to_i
+    minute = match[2].to_i
+    return time_string_to_minutes(TWO_DAY_DEFAULT_ROLLOVER_TIME) unless hour.between?(0, 23) && minute.between?(0, 59)
+
+    (hour * 60) + minute
   end
   # :nocov:
 
