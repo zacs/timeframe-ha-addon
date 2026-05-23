@@ -49,6 +49,10 @@ class DeviceContent
       (home_assistant_api.temperature_unit == "C") ? 18 : 65
     end
 
+    clothing_shirt_threshold = if clothing_forecast
+      (home_assistant_api.temperature_unit == "C") ? 10 : 50
+    end
+
     if home_assistant_api.weather_healthy?
       raw_events << home_assistant_api.hourly_calendar_events
       raw_events << home_assistant_api.daily_calendar_events if include_daily_weather
@@ -143,7 +147,13 @@ class DeviceContent
               daily_high = daily_weather ? daily_weather.summary.to_i : nil
               is_shorts = morning_temp >= clothing_threshold && noon_temp >= clothing_noon_threshold
               is_shorts = false if daily_high && daily_high < clothing_noon_threshold
-              clothing_data = {icon: is_shorts ? "shorts" : "pants", summary: is_shorts ? "Shorts" : "Pants"}
+              short_sleeves = is_shorts || noon_temp > clothing_shirt_threshold
+              clothing_data = {
+                icon: is_shorts ? "shorts" : "pants",
+                summary: is_shorts ? "Shorts" : "Pants",
+                shirt_icon: short_sleeves ? "tshirt" : "long-sleeve-shirt",
+                shirt_summary: short_sleeves ? "T-shirt" : "Long sleeves"
+              }
             end
           end
         end

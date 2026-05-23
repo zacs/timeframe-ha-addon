@@ -243,18 +243,17 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     mock_image = Object.new
     mock_image.define_singleton_method(:to_blob) { fake_blob }
 
-    original_create = MiniMagick::Image.method(:create)
-    MiniMagick::Image.define_singleton_method(:create) do |ext, &block|
+    image_creator = ->(ext, &block) do
       tempfile = Tempfile.new(["test", ext])
       block&.call(tempfile)
       mock_image
     end
 
-    MiniMagick.stub(:convert, ->(&blk) { blk&.call(null_convert) }) do
-      get confirmation_image_account_location_device_path(@account, @location, device)
+    MiniMagick::Image.stub(:create, image_creator) do
+      MiniMagick.stub(:convert, ->(&blk) { blk&.call(null_convert) }) do
+        get confirmation_image_account_location_device_path(@account, @location, device)
+      end
     end
-
-    MiniMagick::Image.define_singleton_method(:create, original_create)
 
     assert_response :success
   end

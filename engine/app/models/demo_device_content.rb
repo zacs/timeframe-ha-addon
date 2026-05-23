@@ -130,7 +130,13 @@ class DemoDeviceContent
             # :nocov:
             is_shorts = morning_temp >= 55 && noon_temp >= 65
             is_shorts = false if daily_high && daily_high < 65
-            clothing_data = {icon: is_shorts ? "shorts" : "pants", summary: is_shorts ? "Shorts" : "Pants"}
+            short_sleeves = is_shorts || noon_temp > 50
+            clothing_data = {
+              icon: is_shorts ? "shorts" : "pants",
+              summary: is_shorts ? "Shorts" : "Pants",
+              shirt_icon: short_sleeves ? "tshirt" : "long-sleeve-shirt",
+              shirt_summary: short_sleeves ? "T-shirt" : "Long sleeves"
+            }
           end
         end
       end

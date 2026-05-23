@@ -363,19 +363,21 @@ class DeviceContenttTest < Minitest::Test
             today = result[:day_groups].find { |d| d[:day_name] == "Today" }
             assert_equal "Shorts", today[:clothing][:summary]
             assert_equal "shorts", today[:clothing][:icon]
+            assert_equal "T-shirt", today[:clothing][:shirt_summary]
+            assert_equal "tshirt", today[:clothing][:shirt_icon]
           end
         end
       end
     end
   end
 
-  def test_clothing_forecast_pants_when_cold
+  def test_clothing_forecast_pants_with_short_sleeves_when_noon_above_shirt_threshold
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api
       tz = "America/Denver"
       weather_events = [
         DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "45°", icon: "weather-cloudy", timezone: tz),
-        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "55°", icon: "weather-cloudy", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "51°", icon: "weather-cloudy", timezone: tz),
         DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "50°", icon: "weather-cloudy", timezone: tz)
       ]
       api.stub :calendars_healthy?, false do
@@ -386,6 +388,33 @@ class DeviceContenttTest < Minitest::Test
             today = result[:day_groups].find { |d| d[:day_name] == "Today" }
             assert_equal "Pants", today[:clothing][:summary]
             assert_equal "pants", today[:clothing][:icon]
+            assert_equal "T-shirt", today[:clothing][:shirt_summary]
+            assert_equal "tshirt", today[:clothing][:shirt_icon]
+          end
+        end
+      end
+    end
+  end
+
+  def test_clothing_forecast_pants_with_long_sleeves_at_shirt_threshold
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      weather_events = [
+        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "45°", icon: "weather-cloudy", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "50°", icon: "weather-cloudy", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "50°", icon: "weather-cloudy", timezone: tz)
+      ]
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, weather_events do
+            result = DeviceContent.new.call(home_assistant_api: api, weather_row: true, clothing_forecast: true, always_show_today: true)
+
+            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+            assert_equal "Pants", today[:clothing][:summary]
+            assert_equal "pants", today[:clothing][:icon]
+            assert_equal "Long sleeves", today[:clothing][:shirt_summary]
+            assert_equal "long-sleeve-shirt", today[:clothing][:shirt_icon]
           end
         end
       end
@@ -433,6 +462,8 @@ class DeviceContenttTest < Minitest::Test
             # Hourly temps say shorts, but daily high (62) < 65 threshold, so pants
             assert_equal "Pants", today[:clothing][:summary]
             assert_equal "pants", today[:clothing][:icon]
+            assert_equal "T-shirt", today[:clothing][:shirt_summary]
+            assert_equal "tshirt", today[:clothing][:shirt_icon]
           end
         end
       end
@@ -455,6 +486,32 @@ class DeviceContenttTest < Minitest::Test
 
             today = result[:day_groups].find { |d| d[:day_name] == "Today" }
             assert_equal "Shorts", today[:clothing][:summary]
+            assert_equal "tshirt", today[:clothing][:shirt_icon]
+          end
+        end
+      end
+    end
+  end
+
+  def test_clothing_forecast_celsius_pants_with_short_sleeves_above_threshold
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api(TimeframeConfig.new(temperature_unit: "C"))
+      tz = "America/Denver"
+      weather_events = [
+        DeviceEvent.new(id: "_ha_weather_hour_1", starts_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 8, 0, 0, "-0600"), summary: "9°", icon: "weather-cloudy", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_2", starts_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "11°", icon: "weather-cloudy", timezone: tz),
+        DeviceEvent.new(id: "_ha_weather_hour_3", starts_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 16, 0, 0, "-0600"), summary: "12°", icon: "weather-cloudy", timezone: tz)
+      ]
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, weather_events do
+            result = DeviceContent.new.call(home_assistant_api: api, weather_row: true, clothing_forecast: true, always_show_today: true)
+
+            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+            assert_equal "Pants", today[:clothing][:summary]
+            assert_equal "pants", today[:clothing][:icon]
+            assert_equal "T-shirt", today[:clothing][:shirt_summary]
+            assert_equal "tshirt", today[:clothing][:shirt_icon]
           end
         end
       end

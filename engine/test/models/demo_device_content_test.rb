@@ -233,7 +233,43 @@ class DemoDeviceContentTest < Minitest::Test
 
       today = result[:day_groups][0]
       assert today[:clothing], "Expected clothing forecast data"
-      assert %w[shorts pants].include?(today[:clothing][:icon])
+      assert_equal "shorts", today[:clothing][:icon]
+      assert_equal "Shorts", today[:clothing][:summary]
+      assert_equal "tshirt", today[:clothing][:shirt_icon]
+      assert_equal "T-shirt", today[:clothing][:shirt_summary]
+    end
+  end
+
+  def test_clothing_forecast_demo_pants_with_long_sleeves
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = demo_clothing_result(morning_temp: 45, noon_temp: 50)
+
+      today = result[:day_groups][0]
+      assert_equal "pants", today[:clothing][:icon]
+      assert_equal "Pants", today[:clothing][:summary]
+      assert_equal "long-sleeve-shirt", today[:clothing][:shirt_icon]
+      assert_equal "Long sleeves", today[:clothing][:shirt_summary]
+    end
+  end
+
+  def test_clothing_forecast_demo_daily_high_guardrail_allows_short_sleeves_with_pants
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = demo_clothing_result(morning_temp: 66, noon_temp: 68, daily_summary: "62° / 45°")
+
+      today = result[:day_groups][0]
+      assert_equal "pants", today[:clothing][:icon]
+      assert_equal "Pants", today[:clothing][:summary]
+      assert_equal "tshirt", today[:clothing][:shirt_icon]
+      assert_equal "T-shirt", today[:clothing][:shirt_summary]
+    end
+  end
+
+  def test_clothing_forecast_demo_omits_clothing_without_morning_weather
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = demo_clothing_result(morning_temp: nil, noon_temp: 68)
+
+      today = result[:day_groups][0]
+      assert_nil today[:clothing]
     end
   end
 
@@ -256,5 +292,61 @@ class DemoDeviceContentTest < Minitest::Test
       assert weather_event, "Expected a demo weather event"
       assert_equal "weather-partly-cloudy", weather_event[:icon_class]
     end
+  end
+
+  private
+
+  def demo_clothing_result(morning_temp:, noon_temp:, daily_summary: "72° / 50°")
+    content = DemoDeviceContent.new
+    content.define_singleton_method(:events_for_day) do |_day_index, date, _current_time, _vacation, timezone, include_wind: true|
+      daily = [
+        DeviceEvent.new(
+          id: "_ha_weather_day_#{date.to_i}",
+          starts_at: date.beginning_of_day,
+          ends_at: (date + 1.day).beginning_of_day,
+          summary: daily_summary,
+          icon: "weather-partly-cloudy",
+          daily: true,
+          timezone: timezone
+        )
+      ]
+      periodic = []
+      if morning_temp
+        periodic << DeviceEvent.new(
+          id: "_ha_weather_hour_#{date.change(hour: 8).to_i}",
+          starts_at: date.change(hour: 8),
+          ends_at: date.change(hour: 8),
+          summary: "#{morning_temp}°",
+          icon: "weather-cloudy",
+          timezone: timezone
+        )
+      end
+      periodic << DeviceEvent.new(
+        id: "_ha_weather_hour_#{date.change(hour: 12).to_i}",
+        starts_at: date.change(hour: 12),
+        ends_at: date.change(hour: 12),
+        summary: "#{noon_temp}°",
+        icon: "weather-cloudy",
+        timezone: timezone
+      )
+      periodic << DeviceEvent.new(
+        id: "_ha_weather_hour_#{date.change(hour: 16).to_i}",
+        starts_at: date.change(hour: 16),
+        ends_at: date.change(hour: 16),
+        summary: "#{noon_temp}°",
+        icon: "weather-cloudy",
+        timezone: timezone
+      )
+
+      {daily: daily, periodic: periodic}
+    end
+
+    content.call(
+      timezone: "America/Chicago",
+      days: 1,
+      weather_row: true,
+      clothing_forecast: true,
+      always_show_today: true
+    )
   end
 end
