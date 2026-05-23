@@ -142,7 +142,7 @@ class Device < ActiveRecord::Base
     two_day = active_template == "two_day"
     eight_day = active_template == "eight_day"
     show_all = configuration&.dig("show_all_events") == "true"
-    show_weather_events = !two_day || configuration&.dig("show_weather_events") != "false"
+    show_weather_events = !compact_view || configuration&.dig("show_weather_events") != "false"
     include_weather_events = (!compact_view && !eight_day) || (show_all && show_weather_events)
     args = {
       days:

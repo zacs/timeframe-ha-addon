@@ -157,9 +157,7 @@
           <h6 class="card-title">Display Options</h6>
           <% options = [] %>
           <% options << {key: "show_all_events", on_label: "Show All Events", off_label: "Only Events with Icons", default_on: false} %>
-          <% if @device.active_template == "two_day" %>
-            <% options << {key: "show_weather_events", on_label: "Show Weather Events", off_label: "Show Weather Events", default_on: true} %>
-          <% end %>
+          <% options << {key: "show_weather_events", on_label: "Show Weather Events", off_label: "Show Weather Events", default_on: true} %>
           <% options << {key: "clothing_forecast", on_label: "Clothing Forecast", off_label: "Clothing Forecast", default_on: false} %>
           <% options << {key: "show_icons", on_label: "Show Icons", off_label: "Show Icons", default_on: true} %>
           <% if @device.configuration&.dig("show_icons") != "false" %>
