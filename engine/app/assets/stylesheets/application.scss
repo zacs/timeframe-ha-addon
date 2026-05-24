@@ -14,6 +14,45 @@
   src: url("/fonts/lato-latin-700-normal.woff2") format("woff2");
 }
 
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/montserrat-latin-400-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/fonts/montserrat-latin-400-700-normal.woff2") format("woff2");
+}
+
+:root {
+  --app-body-font-family: "Montserrat", var(--bs-font-sans-serif);
+  --app-heading-font-family: "Lato", var(--bs-font-sans-serif);
+  --bs-body-font-family: var(--app-body-font-family);
+}
+
+body {
+  font-family: var(--app-body-font-family);
+}
+
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3,
+h4,
+.h4,
+h5,
+.h5,
+h6,
+.h6 {
+  font-family: var(--app-heading-font-family);
+}
+
 .app-header {
   --bs-navbar-brand-color: #000;
   --bs-navbar-brand-hover-color: #000;
@@ -28,7 +67,7 @@
 .app-logo {
   align-items: center;
   display: inline-flex;
-  font-family: "Lato", var(--bs-font-sans-serif);
+  font-family: var(--app-heading-font-family);
   font-size: 1.5625rem;
   font-weight: 400;
   gap: 0.35rem;
