@@ -590,6 +590,35 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
+  def test_auto_icons_skips_ranged_weather_events
+    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      events = [
+        DeviceEvent.new(id: "4_ha_precip", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church-level rain", icon: "weather-rainy", timezone: tz),
+        DeviceEvent.new(id: "5", starts_at: DateTime.new(2023, 8, 27, 11, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 12, 0, 0, "-0600"), summary: "Church service", icon: "calendar", timezone: tz)
+      ]
+      matcher = ->(summary) { summary.include?("Church") ? "church" : nil }
+
+      api.stub :calendars_healthy?, false do
+        api.stub :private_mode?, false do
+          api.stub :calendar_events, events do
+            MdiIconMatcher.stub :match, matcher do
+              result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
+
+              today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+              weather_event = today[:periodic].find { |e| e[:summary] == "Church-level rain" }
+              church_event = today[:periodic].find { |e| e[:summary] == "Church service" }
+
+              assert_equal "weather-rainy", weather_event[:icon_class]
+              assert_equal "church", church_event[:icon_class]
+            end
+          end
+        end
+      end
+    end
+  end
+
   def test_auto_icons_preserves_kids_icon
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api
