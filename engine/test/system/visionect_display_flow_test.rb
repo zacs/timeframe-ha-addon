@@ -36,7 +36,7 @@ class VisionectDisplayFlowTest < ApplicationSystemTestCase
     # Navigate to settings page and enable demo mode
     card = first("h5", text: device_name).ancestor(".card")
     within(card) do
-      click_link "Configure"
+      click_link "Settings"
     end
     within(first(".form-check", text: "Demo Mode")) do
       find("input[type='checkbox'][role='switch']").check

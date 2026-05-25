@@ -219,6 +219,22 @@ class DemoDeviceContentTest < Minitest::Test
     end
   end
 
+  def test_temperature_toggle_hides_weather_row_but_keeps_clothing_forecast
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = DemoDeviceContent.new.call(
+        timezone: "America/Chicago",
+        weather_row: true,
+        clothing_forecast: true,
+        include_temperature: false
+      )
+
+      today = result[:day_groups][0]
+      assert_empty today[:weather_row]
+      assert today[:clothing], "Expected clothing forecast to keep using hourly weather data"
+      assert today[:periodic].none? { |e| e[:weather] && e[:summary]&.end_with?("°") }
+    end
+  end
+
   def test_start_time_only_flag
     travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
       result = DemoDeviceContent.new.call(timezone: "America/Chicago", start_time_only: true)
@@ -249,6 +265,18 @@ class DemoDeviceContentTest < Minitest::Test
       assert_equal "Pants", today[:clothing][:summary]
       assert_equal "long-sleeve-shirt", today[:clothing][:shirt_icon]
       assert_equal "Long sleeves", today[:clothing][:shirt_summary]
+    end
+  end
+
+  def test_clothing_forecast_demo_uses_morning_temperature_when_noon_is_missing
+    travel_to DateTime.new(2026, 3, 19, 8, 0, 0, "-0500") do
+      result = demo_clothing_result(morning_temp: 72, noon_temp: nil)
+
+      today = result[:day_groups][0]
+      assert_equal "shorts", today[:clothing][:icon]
+      assert_equal "Shorts", today[:clothing][:summary]
+      assert_equal "tshirt", today[:clothing][:shirt_icon]
+      assert_equal "T-shirt", today[:clothing][:shirt_summary]
     end
   end
 
@@ -311,7 +339,7 @@ class DemoDeviceContentTest < Minitest::Test
         )
       ]
       periodic = []
-      if morning_temp
+      unless morning_temp.nil?
         periodic << DeviceEvent.new(
           id: "_ha_weather_hour_#{date.change(hour: 8).to_i}",
           starts_at: date.change(hour: 8),
@@ -321,22 +349,24 @@ class DemoDeviceContentTest < Minitest::Test
           timezone: timezone
         )
       end
-      periodic << DeviceEvent.new(
-        id: "_ha_weather_hour_#{date.change(hour: 12).to_i}",
-        starts_at: date.change(hour: 12),
-        ends_at: date.change(hour: 12),
-        summary: "#{noon_temp}°",
-        icon: "weather-cloudy",
-        timezone: timezone
-      )
-      periodic << DeviceEvent.new(
-        id: "_ha_weather_hour_#{date.change(hour: 16).to_i}",
-        starts_at: date.change(hour: 16),
-        ends_at: date.change(hour: 16),
-        summary: "#{noon_temp}°",
-        icon: "weather-cloudy",
-        timezone: timezone
-      )
+      unless noon_temp.nil?
+        periodic << DeviceEvent.new(
+          id: "_ha_weather_hour_#{date.change(hour: 12).to_i}",
+          starts_at: date.change(hour: 12),
+          ends_at: date.change(hour: 12),
+          summary: "#{noon_temp}°",
+          icon: "weather-cloudy",
+          timezone: timezone
+        )
+        periodic << DeviceEvent.new(
+          id: "_ha_weather_hour_#{date.change(hour: 16).to_i}",
+          starts_at: date.change(hour: 16),
+          ends_at: date.change(hour: 16),
+          summary: "#{noon_temp}°",
+          icon: "weather-cloudy",
+          timezone: timezone
+        )
+      end
 
       {daily: daily, periodic: periodic}
     end

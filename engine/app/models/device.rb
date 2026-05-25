@@ -136,6 +136,17 @@ class Device < ActiveRecord::Base
     SUPPORTED_MODELS.dig(model, :templates)
   end
 
+  def weather_event_enabled?(key)
+    value = configuration&.dig(key)
+    return value != "false" unless value.nil?
+
+    # Preserve the legacy setting: it used to hide ranged precip/wind events,
+    # while keeping the temperature row available for compact displays.
+    return false if key != "show_temperature_events" && configuration&.dig("show_weather_events") == "false"
+
+    true
+  end
+
   # :nocov:
   def device_content(timezone: nil, current_time: nil)
     tz = timezone || location&.time_zone || "UTC"
@@ -143,8 +154,10 @@ class Device < ActiveRecord::Base
     two_day = active_template == "two_day"
     eight_day = active_template == "eight_day"
     show_all = configuration&.dig("show_all_events") == "true"
-    show_weather_events = !compact_view || configuration&.dig("show_weather_events") != "false"
-    include_weather_events = (!compact_view && !eight_day) || (show_all && show_weather_events)
+    include_ranged_weather_events = !compact_view || show_all
+    include_temperature_events = weather_event_enabled?("show_temperature_events")
+    include_precip_events = include_ranged_weather_events && weather_event_enabled?("show_precip_events")
+    include_wind_events = include_ranged_weather_events && weather_event_enabled?("show_wind_events")
     effective_current_time = current_time || Time.now.utc.in_time_zone(tz)
     args = {
       days:
@@ -163,9 +176,10 @@ class Device < ActiveRecord::Base
         else
           0
         end,
-      include_precip: include_weather_events,
-      include_wind: include_weather_events,
-      include_weather_alerts: include_weather_events,
+      include_precip: include_precip_events,
+      include_wind: include_wind_events,
+      include_weather_alerts: include_ranged_weather_events && (include_temperature_events || include_precip_events || include_wind_events),
+      include_temperature: include_temperature_events,
       use_day_names: compact_view || eight_day, include_daily_weather: !compact_view && !eight_day,
       weather_row: compact_view || eight_day, start_time_only: compact_view || eight_day,
       always_show_today: compact_view || eight_day,

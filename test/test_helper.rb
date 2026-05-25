@@ -46,24 +46,6 @@ VCR.configure do |config|
   config.ignore_localhost = true
 end
 
-# Seed HomeAssistantConfigApi cache with test data so time_zone is available in all tests
-Rails.cache.write(
-  "#{DEPLOY_TIME}#{HomeAssistantApi::CONFIG_DOMAIN}",
-  {
-    last_fetched_at: Time.now.utc,
-    response: {
-      latitude: 38.4937,
-      longitude: -98.7675,
-      time_zone: "America/Chicago",
-      unit_system: {
-        temperature: "°F",
-        wind_speed: "mph",
-        accumulated_precipitation: "in"
-      }
-    }
-  }.to_json
-)
-
 DEFAULT_TEST_CONFIG = {
   latitude: 38.4937,
   longitude: -98.7675,
@@ -74,6 +56,27 @@ DEFAULT_TEST_CONFIG = {
     accumulated_precipitation: "in"
   }
 }.freeze
+
+def seed_home_assistant_config!
+  Rails.cache.write(
+    "#{DEPLOY_TIME}#{HomeAssistantApi::CONFIG_DOMAIN}",
+    {
+      last_fetched_at: Time.now.utc,
+      response: DEFAULT_TEST_CONFIG
+    }.to_json
+  )
+end
+
+seed_home_assistant_config!
+
+module HomeAssistantConfigCacheSetup
+  def before_setup
+    seed_home_assistant_config!
+    super
+  end
+end
+
+Minitest::Test.prepend(HomeAssistantConfigCacheSetup)
 
 def test_user
   @test_user ||= begin

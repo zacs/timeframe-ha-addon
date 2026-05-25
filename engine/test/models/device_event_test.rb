@@ -230,6 +230,16 @@ class DeviceEventTest < Minitest::Test
     assert_equal(event.summary(DateTime.new(2023, 1, 24)), "foo (2/2)")
   end
 
+  def test_non_daily_multi_day_summary_count
+    event = DeviceEvent.new(
+      starts_at: DateTime.new(2023, 1, 23, 10),
+      ends_at: DateTime.new(2023, 1, 25, 11),
+      summary: "foo"
+    )
+
+    assert_equal(event.summary(DateTime.new(2023, 1, 24)), "foo (2/3)")
+  end
+
   def test_omit_if_blank
     event = DeviceEvent.new(
       starts_at: DateTime.new(2023, 1, 23),
@@ -443,6 +453,32 @@ class DeviceEventTest < Minitest::Test
     assert_nil(event.kids_icon)
   end
 
+  def test_timeframe_icon_overrides_icon_from_description
+    event = DeviceEvent.new(
+      starts_at: 1621288800,
+      ends_at: 1621292400,
+      summary: "Practice",
+      icon: "calendar",
+      description: "Bring cleats\n\ntimeframe-icon:soccer"
+    )
+
+    assert_equal("soccer", event.icon)
+    assert_equal("soccer", event.as_json[:icon_class])
+    assert_equal("soccer", event.as_json[:timeframe_icon])
+  end
+
+  def test_timeframe_icon_strips_mdi_prefix
+    event = DeviceEvent.new(
+      starts_at: 1621288800,
+      ends_at: 1621292400,
+      summary: "Practice",
+      icon: "calendar",
+      description: "timeframe-icon:mdi-soccer"
+    )
+
+    assert_equal("soccer", event.icon)
+  end
+
   def test_title_override_from_description
     event = DeviceEvent.new(
       starts_at: 1621288800,
@@ -559,6 +595,16 @@ class DeviceEventTest < Minitest::Test
     refute event.banner?
   end
 
+  def test_banner_description_nil_without_description
+    event = DeviceEvent.new(
+      starts_at: 1621288800,
+      ends_at: 1621292400,
+      summary: "No Description"
+    )
+
+    assert_nil event.banner_description
+  end
+
   def test_banner_description_sanitizes_html
     event = DeviceEvent.new(
       starts_at: 1621288800,
@@ -606,10 +652,11 @@ class DeviceEventTest < Minitest::Test
       starts_at: 1621288800,
       ends_at: 1621292400,
       summary: "Alert",
-      description: "timeframe-banner\ntimeframe-kids-icon:car\ntimeframe-only:kitchen\nActual message"
+      description: "timeframe-banner\ntimeframe-icon:soccer\ntimeframe-kids-icon:car\ntimeframe-only:kitchen\nActual message"
     )
 
     desc = event.banner_description
+    refute_includes desc, "timeframe-icon"
     refute_includes desc, "timeframe-kids-icon"
     refute_includes desc, "timeframe-only"
     assert_includes desc, "Actual message"

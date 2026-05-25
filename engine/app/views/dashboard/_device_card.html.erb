@@ -61,7 +61,7 @@
     <% end %>
     <div class="card-footer d-flex justify-content-between align-items-center">
       <span class="text-body-tertiary" style="font-size: 0.75rem;">Updated <%= time_ago_in_words(device.cached_image_at || device.last_connection_at || device.updated_at) %> ago</span>
-      <a href="<%= settings_account_location_device_path(account, location, device) %>" class="btn btn-outline-secondary btn-sm">Configure</a>
+      <a href="<%= settings_account_location_device_path(account, location, device) %>" class="btn btn-outline-secondary btn-sm"><i class="mdi mdi-cog me-1"></i>Settings</a>
     </div>
 
     <% if device.pairing_code_device? %>

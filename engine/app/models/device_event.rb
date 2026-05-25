@@ -1,5 +1,6 @@
 class DeviceEvent
   DAY_IN_SECONDS = 86_400
+  TIMEFRAME_ICON_PATTERN = /timeframe-icon:(?:mdi-)?([a-z0-9][a-z0-9-]*)/i
 
   attr_reader :id, :starts_at, :ends_at, :multi_day, :location, :icon_rotation, :attachment_image, :kids_icon, :precip, :wind_gust
   attr_accessor :icon
@@ -31,6 +32,8 @@ class DeviceEvent
     end
 
     @kids_icon = @description&.match(/timeframe-kids-icon:(\S+)/)&.captures&.first
+    @timeframe_icon = @description&.match(TIMEFRAME_ICON_PATTERN)&.captures&.first
+    @icon = @timeframe_icon if @timeframe_icon.present?
 
     title_override = @description&.match(/timeframe-title:(.+?)(?:\n|$)/)&.captures&.first&.strip
     @summary = title_override if title_override.present?
@@ -94,6 +97,7 @@ class DeviceEvent
     text.gsub!(/timeframe-private\s*/, "")
     text.gsub!(/timeframe-omit\s*/, "")
     text.gsub!(/timeframe-title:\S+\s*/, "")
+    text.gsub!(/timeframe-icon:(?:mdi-)?[a-z0-9][a-z0-9-]*\s*/i, "")
     text.gsub!(/timeframe-kids-icon:\S+\s*/, "")
     text.gsub!(/timeframe-only:[^\n]+\s*/, "")
 
@@ -242,6 +246,7 @@ class DeviceEvent
       weather_ranged: weather_ranged?,
       weather: weather?,
       attachment_image: attachment_image,
+      timeframe_icon: @timeframe_icon,
       kids_icon: kids_icon,
       precip: precip,
       wind_gust: wind_gust

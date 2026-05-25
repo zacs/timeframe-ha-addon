@@ -145,6 +145,31 @@ class DevicesController < ApplicationController
     redirect_to settings_account_location_device_path(@account, @location, device), alert: e.message
   end
 
+  def update_event_icon
+    device = @location.devices.find(params[:id])
+    calendar_event = @account.calendar_events.find(params[:calendar_event_id])
+
+    CalendarEventIconUpdater.call(calendar_event: calendar_event, icon: params[:icon])
+
+    RefreshDeviceScreenshotJob.perform_later(device.id) if device.screenshotted?
+    if device.realtime_display?
+      DeviceBroadcaster.clear_hash(device.id)
+      DeviceBroadcaster.broadcast_if_changed(device)
+    end
+
+    redirect_to settings_account_location_device_path(@account, @location, device), notice: "Event icon updated."
+  rescue CalendarEventIconUpdater::Error => e
+    flash[:alert] = e.message
+    if defined?(CalendarEventIconUpdater::GOOGLE_RECONNECT_MESSAGE) && e.message == CalendarEventIconUpdater::GOOGLE_RECONNECT_MESSAGE
+      flash[:google_reconnect_account_id] = @account.id
+    elsif defined?(CalendarEventIconUpdater::MICROSOFT_RECONNECT_MESSAGE) && e.message == CalendarEventIconUpdater::MICROSOFT_RECONNECT_MESSAGE
+      flash[:microsoft_reconnect_account_id] = @account.id
+    end
+    redirect_to settings_account_location_device_path(@account, @location, device)
+  rescue ActiveRecord::RecordNotFound
+    redirect_to settings_account_location_device_path(@account, @location, params[:id]), alert: "Event not found."
+  end
+
   def destroy
     device = @location.devices.find(params[:id])
 

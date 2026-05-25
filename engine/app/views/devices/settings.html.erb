@@ -151,22 +151,29 @@
     <% end %>
 
     <%# Display options %>
-    <% if %w[two_day three_day].include?(@device.active_template) %>
+    <% if @device.active_template.present? %>
       <div class="card mb-3">
         <div class="card-body">
           <h6 class="card-title">Display Options</h6>
           <% options = [] %>
-          <% options << {key: "show_all_events", on_label: "Show All Events", off_label: "Only Events with Icons", default_on: false} %>
-          <% options << {key: "show_weather_events", on_label: "Show Weather Events", off_label: "Show Weather Events", default_on: true} %>
-          <% options << {key: "clothing_forecast", on_label: "Clothing Forecast", off_label: "Clothing Forecast", default_on: false} %>
-          <% options << {key: "show_icons", on_label: "Show Icons", off_label: "Show Icons", default_on: true} %>
-          <% if @device.configuration&.dig("show_icons") != "false" %>
-            <% options << {key: "auto_assign_icons", on_label: "Auto Assign Icons", off_label: "Auto Assign Icons", default_on: true} %>
+          <% compact_template = %w[two_day three_day].include?(@device.active_template) %>
+          <% if compact_template %>
+            <% options << {key: "show_all_events", on_label: "Show All Events", off_label: "Only Events with Icons", default_on: false} %>
           <% end %>
-          <% if @device.active_template == "two_day" %>
-            <% options << {key: "hide_dates", on_label: "Hide Dates", off_label: "Hide Dates", default_on: false} %>
-            <% options << {key: "show_event_times", on_label: "Show Event Times", off_label: "Show Event Times", default_on: true} %>
-            <% options << {key: "two_day_rollover_enabled", on_label: "Hide Current Day After Time", off_label: "Hide Current Day After Time", default_on: false} %>
+          <% options << {key: "show_temperature_events", on_label: "Show Hourly Temperature Events", off_label: "Show Hourly Temperature Events", default_on: true} %>
+          <% options << {key: "show_precip_events", on_label: "Show Precip Events", off_label: "Show Precip Events", default_on: true} %>
+          <% options << {key: "show_wind_events", on_label: "Show Wind Events", off_label: "Show Wind Events", default_on: true} %>
+          <% if compact_template %>
+            <% options << {key: "clothing_forecast", on_label: "Clothing Forecast", off_label: "Clothing Forecast", default_on: false} %>
+            <% options << {key: "show_icons", on_label: "Show Icons", off_label: "Show Icons", default_on: true} %>
+            <% if @device.configuration&.dig("show_icons") != "false" %>
+              <% options << {key: "auto_assign_icons", on_label: "Auto Assign Icons", off_label: "Auto Assign Icons", default_on: true} %>
+            <% end %>
+            <% if @device.active_template == "two_day" %>
+              <% options << {key: "hide_dates", on_label: "Hide Dates", off_label: "Hide Dates", default_on: false} %>
+              <% options << {key: "show_event_times", on_label: "Show Event Times", off_label: "Show Event Times", default_on: true} %>
+              <% options << {key: "two_day_rollover_enabled", on_label: "Hide Current Day After Time", off_label: "Hide Current Day After Time", default_on: false} %>
+            <% end %>
           <% end %>
           <% options.each do |opt| %>
             <%
@@ -219,6 +226,10 @@
         <% end %>
       </div>
     </div>
+
+    <% if lookup_context.template_exists?("event_icons", "devices", true) %>
+      <%= render "devices/event_icons" %>
+    <% end %>
 
     <%# Demo mode %>
     <div class="card mb-3">
