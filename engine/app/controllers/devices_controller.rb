@@ -175,9 +175,11 @@ class DevicesController < ApplicationController
 
     if params[:name_confirmation].to_s.downcase.strip == device.name.downcase.strip
       device.destroy
+      redirect_to root_path, notice: "Device \"#{device.name}\" deleted.", status: :see_other
+      return
     end
 
-    redirect_back fallback_location: root_path
+    redirect_back fallback_location: root_path, alert: "Device name confirmation did not match.", status: :see_other
   end
 
   def regenerate_tokens
