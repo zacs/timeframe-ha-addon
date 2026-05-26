@@ -48,8 +48,8 @@
 
         <% only_icons = @view_object.dig(:configuration, "only_show_events_with_icons") == "true" %>
         <% show_icons = @view_object.dig(:configuration, "show_icons") != "false" %>
-        <% daily_images = day[:show_daily] && day[:daily].any? ? (only_icons ? day[:daily].select { |e| e[:timeframe_icon] || e[:kids_icon] } : day[:daily]) : [] %>
-        <% visual_periodic = only_icons ? day[:periodic].select { |e| e[:timeframe_icon] || e[:kids_icon] } : day[:periodic] %>
+        <% daily_images = day[:show_daily] && day[:daily].any? ? (only_icons ? day[:daily].select { |e| e[:timeframe_icon] } : day[:daily]) : [] %>
+        <% visual_periodic = only_icons ? day[:periodic].select { |e| e[:timeframe_icon] } : day[:periodic] %>
         <% if daily_images.any? || visual_periodic.any? %>
           <div class="three-day-events">
             <table>
@@ -58,9 +58,7 @@
                   <td style="white-space: nowrap; font-size: .85rem; padding: 0 .6rem 0 0; width: 1%;"></td>
                   <% if show_icons %>
                   <td class="three-day-event-icon">
-                    <% if event[:kids_icon] %>
-                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
-                    <% elsif event[:icon_class] %>
+                    <% if event[:icon_class] %>
                       <% if event[:icon_style] %>
                         <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
                       <% else %>
@@ -81,9 +79,7 @@
                   </td>
                   <% if show_icons %>
                   <td class="three-day-event-icon">
-                    <% if event[:kids_icon] %>
-                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
-                    <% elsif event[:icon_class] %>
+                    <% if event[:icon_class] %>
                       <% if event[:icon_style] %>
                         <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
                       <% else %>

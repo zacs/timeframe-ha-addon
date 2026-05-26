@@ -84,8 +84,8 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
     html = render_component(
       Devices::ThreeDayComponent,
       events: [
-        event(summary: "Plain Event", timeframe_icon: nil, kids_icon: nil),
-        event(summary: "Tagged Event", kids_icon: "church")
+        event(summary: "Plain Event", timeframe_icon: nil),
+        event(summary: "Tagged Event", timeframe_icon: "church")
       ],
       configuration: {
         "only_show_events_with_icons" => "true",
@@ -135,8 +135,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
       full_start_time: "6:00pm",
       full_time: "6:00pm - 6:30pm",
       weather_ranged: false,
-      timeframe_icon: "soccer",
-      kids_icon: nil
+      timeframe_icon: "soccer"
     }.merge(overrides)
   end
 end

@@ -307,7 +307,7 @@ class DemoDeviceContentTest < Minitest::Test
 
       all_events = result[:day_groups].flat_map { |d| d[:daily] + d[:periodic] }
       non_weather = all_events.reject { |e| e[:weather_ranged] }
-      icons_assigned = non_weather.select { |e| e[:icon_class] || e[:kids_icon] }
+      icons_assigned = non_weather.select { |e| e[:icon_class] }
       assert icons_assigned.any?, "Expected at least one event to have an auto-assigned icon"
     end
   end

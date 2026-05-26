@@ -661,28 +661,6 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
-  def test_auto_icons_preserves_kids_icon
-    travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
-      api = new_test_api
-      tz = "America/Denver"
-      events = [
-        DeviceEvent.new(id: "1", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church", icon: "calendar", description: "timeframe-kids-icon:church", timezone: tz)
-      ]
-      api.stub :calendars_healthy?, false do
-        api.stub :private_mode?, false do
-          api.stub :calendar_events, events do
-            result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
-
-            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
-            event = today[:periodic].find { |e| e[:summary] == "Church" }
-            assert_equal "church", event[:kids_icon]
-            assert_equal "calendar", event[:icon_class]
-          end
-        end
-      end
-    end
-  end
-
   def test_auto_icons_preserves_timeframe_icon
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api

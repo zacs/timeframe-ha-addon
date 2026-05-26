@@ -431,28 +431,6 @@ class DeviceEventTest < Minitest::Test
     refute(event.hidden_for?(nil))
   end
 
-  def test_kids_icon_parsed_from_description
-    event = DeviceEvent.new(
-      starts_at: 1621288800,
-      ends_at: 1621292400,
-      summary: "Church",
-      description: "timeframe-kids-icon:church"
-    )
-
-    assert_equal("church", event.kids_icon)
-    assert_equal("church", event.as_json[:kids_icon])
-  end
-
-  def test_kids_icon_nil_without_tag
-    event = DeviceEvent.new(
-      starts_at: 1621288800,
-      ends_at: 1621292400,
-      summary: "foo"
-    )
-
-    assert_nil(event.kids_icon)
-  end
-
   def test_timeframe_icon_overrides_icon_from_description
     event = DeviceEvent.new(
       starts_at: 1621288800,
@@ -507,11 +485,11 @@ class DeviceEventTest < Minitest::Test
       starts_at: 1621288800,
       ends_at: 1621292400,
       summary: "Original",
-      description: "timeframe-kids-icon:church\ntimeframe-title:Sunday Service"
+      description: "timeframe-icon:church\ntimeframe-title:Sunday Service"
     )
 
     assert_equal("Sunday Service", event.summary)
-    assert_equal("church", event.kids_icon)
+    assert_equal("church", event.as_json[:timeframe_icon])
   end
 
   def test_precip_from_precip_icon_and_label
@@ -652,12 +630,11 @@ class DeviceEventTest < Minitest::Test
       starts_at: 1621288800,
       ends_at: 1621292400,
       summary: "Alert",
-      description: "timeframe-banner\ntimeframe-icon:soccer\ntimeframe-kids-icon:car\ntimeframe-only:kitchen\nActual message"
+      description: "timeframe-banner\ntimeframe-icon:soccer\ntimeframe-only:kitchen\nActual message"
     )
 
     desc = event.banner_description
     refute_includes desc, "timeframe-icon"
-    refute_includes desc, "timeframe-kids-icon"
     refute_includes desc, "timeframe-only"
     assert_includes desc, "Actual message"
   end
