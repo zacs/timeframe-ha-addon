@@ -153,8 +153,8 @@ class Device < ActiveRecord::Base
     compact_view = %w[three_day two_day].include?(active_template)
     two_day = active_template == "two_day"
     eight_day = active_template == "eight_day"
-    show_all = configuration&.dig("show_all_events") == "true"
-    include_ranged_weather_events = !compact_view || show_all
+    configuration&.dig("only_show_events_with_icons")
+    include_ranged_weather_events = true
     include_temperature_events = weather_event_enabled?("show_temperature_events")
     include_precip_events = include_ranged_weather_events && weather_event_enabled?("show_precip_events")
     include_wind_events = include_ranged_weather_events && weather_event_enabled?("show_wind_events")

@@ -158,7 +158,7 @@
           <% options = [] %>
           <% compact_template = %w[two_day three_day].include?(@device.active_template) %>
           <% if compact_template %>
-            <% options << {key: "show_all_events", on_label: "Show All Events", off_label: "Only Events with Icons", default_on: false} %>
+            <% options << {key: "only_show_events_with_icons", on_label: "Only Show Calendar Events with Icons", off_label: "Only Show Calendar Events with Icons", default_on: false} %>
           <% end %>
           <% options << {key: "show_temperature_events", on_label: "Show Hourly Temperature Events", off_label: "Show Hourly Temperature Events", default_on: true} %>
           <% options << {key: "show_precip_events", on_label: "Show Precip Events", off_label: "Show Precip Events", default_on: true} %>

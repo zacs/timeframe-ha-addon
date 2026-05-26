@@ -384,7 +384,6 @@ class DeviceTest < Minitest::Test
       display_template: "two_day",
       demo_mode_enabled: true,
       configuration: {
-        "show_all_events" => "true",
         "show_weather_events" => "false",
         "clothing_forecast" => "true"
       }
@@ -515,7 +514,6 @@ class DeviceTest < Minitest::Test
       display_template: "three_day",
       demo_mode_enabled: true,
       configuration: {
-        "show_all_events" => "true",
         "show_weather_events" => "false",
         "clothing_forecast" => "true"
       }

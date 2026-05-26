@@ -10,7 +10,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
         event(time_html: "6-6:30p", start_time: "6p", full_start_time: "6:00pm", full_time: "6:00pm - 6:30pm")
       ],
       configuration: {
-        "show_all_events" => "true",
+        "only_show_events_with_icons" => "true",
         "show_event_times" => "true",
         "show_icons" => "false"
       }
@@ -44,7 +44,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
     refute_includes html, "2:00pm"
   end
 
-  test "two day show all events only includes timeframe tagged events" do
+  test "two day only show calendar events with icons filters to tagged events" do
     html = render_component(
       Devices::TwoDayComponent,
       events: [
@@ -52,7 +52,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
         event(summary: "Tagged Event", timeframe_icon: "soccer")
       ],
       configuration: {
-        "show_all_events" => "true",
+        "only_show_events_with_icons" => "true",
         "show_event_times" => "false",
         "show_icons" => "false"
       }
@@ -62,7 +62,25 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
     refute_includes html, "Plain Event"
   end
 
-  test "three day show all events only includes timeframe tagged events" do
+  test "two day without only show calendar events with icons includes all events" do
+    html = render_component(
+      Devices::TwoDayComponent,
+      events: [
+        event(summary: "Plain Event", timeframe_icon: nil),
+        event(summary: "Tagged Event", timeframe_icon: "soccer")
+      ],
+      configuration: {
+        "only_show_events_with_icons" => "false",
+        "show_event_times" => "false",
+        "show_icons" => "false"
+      }
+    )
+
+    assert_includes html, "Tagged Event"
+    assert_includes html, "Plain Event"
+  end
+
+  test "three day only show calendar events with icons filters to tagged events" do
     html = render_component(
       Devices::ThreeDayComponent,
       events: [
@@ -70,7 +88,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
         event(summary: "Tagged Event", kids_icon: "church")
       ],
       configuration: {
-        "show_all_events" => "true",
+        "only_show_events_with_icons" => "true",
         "show_icons" => "false"
       }
     )
@@ -88,7 +106,7 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
           private_mode: false,
           current_time: Time.zone.local(2026, 5, 23, 8, 0, 0),
           configuration: {
-            "show_all_events" => "true",
+            "only_show_events_with_icons" => "true",
             "show_icons" => "false"
           }.merge(configuration),
           day_groups: [
