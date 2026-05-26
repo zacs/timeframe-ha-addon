@@ -105,12 +105,15 @@ class TwoDayVisualRegressionTest < ApplicationSystemTestCase
     api.seed_calendars(events)
   end
 
-  def calendar_event(summary:, starts_at:, ends_at:, icon:)
+  def calendar_event(summary:, starts_at:, ends_at:, icon:, description: nil)
+    description ||= "timeframe-icon:#{icon}"
+
     {
       starts_at: starts_at,
       ends_at: ends_at,
       summary: summary,
-      icon: icon
+      icon: icon,
+      description: description
     }
   end
 

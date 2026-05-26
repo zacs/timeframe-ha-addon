@@ -44,6 +44,41 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
     refute_includes html, "2:00pm"
   end
 
+  test "two day show all events only includes timeframe tagged events" do
+    html = render_component(
+      Devices::TwoDayComponent,
+      events: [
+        event(summary: "Plain Event", timeframe_icon: nil),
+        event(summary: "Tagged Event", timeframe_icon: "soccer")
+      ],
+      configuration: {
+        "show_all_events" => "true",
+        "show_event_times" => "false",
+        "show_icons" => "false"
+      }
+    )
+
+    assert_includes html, "Tagged Event"
+    refute_includes html, "Plain Event"
+  end
+
+  test "three day show all events only includes timeframe tagged events" do
+    html = render_component(
+      Devices::ThreeDayComponent,
+      events: [
+        event(summary: "Plain Event", timeframe_icon: nil, kids_icon: nil),
+        event(summary: "Tagged Event", kids_icon: "church")
+      ],
+      configuration: {
+        "show_all_events" => "true",
+        "show_icons" => "false"
+      }
+    )
+
+    assert_includes html, "Tagged Event"
+    refute_includes html, "Plain Event"
+  end
+
   private
 
   def render_component(component_class, events:, configuration: {})
@@ -81,7 +116,9 @@ class CompactEventTimesComponentTest < ActiveSupport::TestCase
       start_time: "6p",
       full_start_time: "6:00pm",
       full_time: "6:00pm - 6:30pm",
-      weather_ranged: false
+      weather_ranged: false,
+      timeframe_icon: "soccer",
+      kids_icon: nil
     }.merge(overrides)
   end
 end

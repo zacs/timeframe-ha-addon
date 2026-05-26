@@ -48,8 +48,8 @@
 
         <% show_all = @view_object.dig(:configuration, "show_all_events") == "true" %>
         <% show_icons = @view_object.dig(:configuration, "show_icons") != "false" %>
-        <% daily_images = day[:show_daily] && day[:daily].any? ? (show_all ? day[:daily] : day[:daily].select { |e| e[:attachment_image] || e[:kids_icon] }) : [] %>
-        <% visual_periodic = show_all ? day[:periodic] : day[:periodic].select { |e| e[:attachment_image] || e[:kids_icon] } %>
+        <% daily_images = day[:show_daily] && day[:daily].any? ? (show_all ? day[:daily].select { |e| e[:timeframe_icon] || e[:kids_icon] } : day[:daily].select { |e| e[:attachment_image] || e[:kids_icon] }) : [] %>
+        <% visual_periodic = show_all ? day[:periodic].select { |e| e[:timeframe_icon] || e[:kids_icon] } : day[:periodic].select { |e| e[:attachment_image] || e[:kids_icon] } %>
         <% if daily_images.any? || visual_periodic.any? %>
           <div class="three-day-events">
             <table>
