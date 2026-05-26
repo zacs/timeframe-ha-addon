@@ -1,23 +1,16 @@
 ## [2.13.0] - 2026-05-26
 
 ### Added
-- Favicon, app icons, and web manifest for installable PWA support
 - Individual toggles for precipitation and wind events on two-day and three-day templates (previously a single "Show Weather Events" toggle controlled both)
-- "Hide Dates" option on two-day template
-- "Show Event Times" option on two-day template
 - "Hide Current Day After Time" option on two-day template: automatically advances to show tomorrow once the configured time passes (default 6:00 PM)
 - Granular weather event toggles now respect the legacy `show_weather_events=false` setting for existing devices
-- Visual regression test for TRMNL template rendering
 
 ### Changed
-- "Show All Events" on compact templates now only includes events explicitly tagged with `timeframe-icon` or `timeframe-kids-icon`; untagged events continue to require an icon to appear
-- Device card updated timestamp now reads "Updated <1m ago" when last update was under one minute ago
 - Two-day template title wrapping is now suppressed when titles fit on a single line
 - Two-day and three-day templates use a compact time format
 
 ### Fixed
 - Deleting a device from the settings page redirected back to the now-deleted settings URL (404); now redirects to the dashboard with a confirmation notice
-- Three-day "Show All Events" was including events that should have been filtered
 
 ## [2.12.0] - 2026-05-18
 
