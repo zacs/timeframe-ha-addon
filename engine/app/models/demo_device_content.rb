@@ -2,7 +2,7 @@
 
 class DemoDeviceContent
   def call(timezone: "UTC", current_time: nil, days: 5, include_precip: true, include_wind: true,
-    include_weather_alerts: true,
+    include_weather_alerts: true, include_temperature: true,
     use_day_names: false, include_daily_weather: true, weather_row: false, start_time_only: false,
     always_show_today: false, start_offset: 0, clothing_forecast: false, auto_icons: false, event_filter: nil)
     current_time ||= Time.now.utc.in_time_zone(timezone)
@@ -59,12 +59,13 @@ class DemoDeviceContent
     out[:private_mode] = false
 
     out[:day_groups] = build_day_groups(current_time, timezone, days: days, include_wind: include_wind,
-      use_day_names: use_day_names, weather_row: weather_row, start_offset: start_offset, clothing_forecast: clothing_forecast)
+      include_temperature: include_temperature, use_day_names: use_day_names, weather_row: weather_row,
+      start_offset: start_offset, clothing_forecast: clothing_forecast)
 
     if auto_icons
       out[:day_groups].each do |day|
         (day[:daily] + day[:periodic]).each do |event|
-          next if event[:kids_icon] || event[:weather]
+          next if event[:weather]
           matched = MdiIconMatcher.match(event[:summary])
           if matched
             event[:icon_class] = matched
@@ -81,7 +82,7 @@ class DemoDeviceContent
 
   private
 
-  def build_day_groups(current_time, timezone, days: 5, include_wind: true, use_day_names: false, weather_row: false, start_offset: 0, clothing_forecast: false)
+  def build_day_groups(current_time, timezone, days: 5, include_wind: true, include_temperature: true, use_day_names: false, weather_row: false, start_offset: 0, clothing_forecast: false)
     today = current_time.to_date
     tz = ActiveSupport::TimeZone[timezone]
     vacation = DeviceEvent.new(
@@ -116,7 +117,7 @@ class DemoDeviceContent
       if weather_row
         weather_events, periodic_events = periodic_events.partition(&:weather?)
         weather_events = weather_events.select { |e| e.weather_hourly? && [8, 12, 16].include?(e.starts_at.hour) }
-        weather_row_data = weather_events.map { |e| e.as_json(date: date.to_date) }
+        weather_row_data = include_temperature ? weather_events.map { |e| e.as_json(date: date.to_date) } : []
 
         if clothing_forecast
           morning = weather_events.find { |e| e.starts_at.hour == 8 }
@@ -146,7 +147,7 @@ class DemoDeviceContent
         date: date.to_date,
         show_daily: show_daily,
         daily: events[:daily].map { |e| e.as_json(date: date.to_date) },
-        periodic: periodic_events.map { |e| e.as_json(date: date.to_date) },
+        periodic: periodic_events.reject { |e| e.weather? && !include_temperature }.map { |e| e.as_json(date: date.to_date) },
         weather_row: weather_row_data,
         clothing: clothing_data
       }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 9) do
+ActiveRecord::Schema[8.1].define(version: 11) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -72,6 +72,8 @@ ActiveRecord::Schema[8.1].define(version: 9) do
     t.datetime "ends_at", null: false
     t.string "external_id", null: false
     t.string "location"
+    t.string "provider_etag"
+    t.string "provider_url"
     t.string "start_timezone"
     t.datetime "starts_at", null: false
     t.string "title"
@@ -226,6 +228,7 @@ ActiveRecord::Schema[8.1].define(version: 9) do
     t.text "email", null: false
     t.text "google_uid", null: false
     t.text "refresh_token", null: false
+    t.text "scopes"
     t.datetime "token_expires_at"
     t.datetime "updated_at", null: false
     t.index ["account_id", "google_uid"], name: "index_google_accounts_on_account_id_and_google_uid", unique: true

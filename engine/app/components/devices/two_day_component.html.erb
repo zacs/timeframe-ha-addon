@@ -20,9 +20,6 @@
   .two-day-events td.two-day-event-time { white-space: nowrap; font-size: 75%; padding: 0 .6rem 0 0; width: 1%; }
   .two-day-events-with-times { font-size: 1.5rem; }
   .two-day-events-with-times td.two-day-event-icon { width: 2rem; font-size: 1.55rem; }
-  .two-day-kids-event { display: flex; flex-direction: row; align-items: center; gap: .5rem; padding: .35rem 0; }
-  .two-day-kids-icon { line-height: 1; width: 3rem; text-align: center; }
-  .two-day-kids-summary { font-size: 2.25rem; }
   .two-day-clothing-large { line-height: 1; display: inline-block; }
   .two-day-clothing { text-align: center; font-size: 1.25rem; margin-bottom: .25rem; }
   .two-day-clothing-icon { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: .15em; }
@@ -34,7 +31,7 @@
 </style>
 
 <% unless @view_object[:private_mode] %>
-  <% show_all = @view_object.dig(:configuration, "show_all_events") == "true" %>
+  <% only_icons = @view_object.dig(:configuration, "only_show_events_with_icons") == "true" %>
   <% show_times = @view_object.dig(:configuration, "show_event_times") != "false" %>
   <% show_icons = @view_object.dig(:configuration, "show_icons") != "false" %>
   <div class="two-day-columns">
@@ -61,8 +58,8 @@
           <% end %>
         </div>
 
-        <% daily_visual = day[:show_daily] && day[:daily].any? ? (show_all ? day[:daily] : day[:daily].select { |e| e[:attachment_image] || e[:kids_icon] }) : [] %>
-        <% visual_periodic = show_all ? day[:periodic] : day[:periodic].select { |e| e[:attachment_image] || e[:kids_icon] } %>
+        <% daily_visual = day[:show_daily] && day[:daily].any? ? (only_icons ? day[:daily].select { |e| e[:timeframe_icon] } : day[:daily]) : [] %>
+        <% visual_periodic = only_icons ? day[:periodic].select { |e| e[:timeframe_icon] } : day[:periodic] %>
         <% if daily_visual.any? || visual_periodic.any? %>
           <div class="two-day-events<%= ' two-day-events-with-times' if show_times %>">
             <table>
@@ -73,9 +70,7 @@
                   <% end %>
                   <% if show_icons %>
                   <td class="two-day-event-icon">
-                    <% if event[:kids_icon] %>
-                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
-                    <% elsif event[:icon_class] %>
+                    <% if event[:icon_class] %>
                       <% if event[:icon_style] %>
                         <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
                       <% else %>
@@ -98,9 +93,7 @@
                   <% end %>
                   <% if show_icons %>
                   <td class="two-day-event-icon">
-                    <% if event[:kids_icon] %>
-                      <i class="mdi mdi-<%= event[:kids_icon] %>"></i>
-                    <% elsif event[:icon_class] %>
+                    <% if event[:icon_class] %>
                       <% if event[:icon_style] %>
                         <i class="mdi mdi-<%= event[:icon_class] %>" style="<%= event[:icon_style] %>"></i>
                       <% else %>

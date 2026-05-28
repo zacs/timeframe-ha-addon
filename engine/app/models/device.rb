@@ -13,8 +13,7 @@ class Device < ActiveRecord::Base
     "trmnl_og" => {name: "TRMNL (OG)", template: "trmnl", width: 800, height: 480, templates: [{name: "trmnl", label: "Landscape Timeline"}, {name: "three_day", label: "3-Day"}, {name: "two_day", label: "2-Day"}], screenshotted: true},
     "reterminal_e1001" => {name: "reTerminal E1001 7.5\"", template: "trmnl", width: 800, height: 480, templates: [{name: "trmnl", label: "Landscape Timeline"}, {name: "three_day", label: "3-Day"}, {name: "two_day", label: "2-Day"}], screenshotted: true},
     "reterminal_e1003" => {name: "reTerminal E1003 10.3\"", template: "reterminal", width: 1404, height: 1872, screenshotted: true},
-    "trmnl_x" => {name: "TRMNL (X)", template: "reterminal", width: 1404, height: 1872, screenshotted: true},
-    "display_1080p" => {name: "1080p Display", template: "eight_day", width: 1920, height: 1080, realtime: true}
+    "trmnl_x" => {name: "TRMNL (X)", template: "reterminal", width: 1404, height: 1872, screenshotted: true}
   }.freeze
 
   REALTIME_MODELS = SUPPORTED_MODELS.select { |_, v| v[:realtime] }.keys.freeze
@@ -136,39 +135,48 @@ class Device < ActiveRecord::Base
     SUPPORTED_MODELS.dig(model, :templates)
   end
 
+  def weather_event_enabled?(key)
+    value = configuration&.dig(key)
+    return value != "false" unless value.nil?
+
+    # Preserve the legacy setting: it used to hide ranged precip/wind events,
+    # while keeping the temperature row available for compact displays.
+    return false if key != "show_temperature_events" && configuration&.dig("show_weather_events") == "false"
+
+    true
+  end
+
   # :nocov:
   def device_content(timezone: nil, current_time: nil)
     tz = timezone || location&.time_zone || "UTC"
     compact_view = %w[three_day two_day].include?(active_template)
     two_day = active_template == "two_day"
-    eight_day = active_template == "eight_day"
-    show_all = configuration&.dig("show_all_events") == "true"
-    show_weather_events = !compact_view || configuration&.dig("show_weather_events") != "false"
-    include_weather_events = (!compact_view && !eight_day) || (show_all && show_weather_events)
+    configuration&.dig("only_show_events_with_icons")
+    include_ranged_weather_events = true
+    include_temperature_events = weather_event_enabled?("show_temperature_events")
+    include_precip_events = include_ranged_weather_events && weather_event_enabled?("show_precip_events")
+    include_wind_events = include_ranged_weather_events && weather_event_enabled?("show_wind_events")
     effective_current_time = current_time || Time.now.utc.in_time_zone(tz)
     args = {
       days:
         if two_day
           2
-        elsif eight_day
-          8
         else
           (compact_view ? 3 : 5)
         end,
       start_offset:
-        if eight_day
-          -1
-        elsif two_day
+        if two_day
           two_day_start_offset(effective_current_time, timezone: tz)
         else
           0
         end,
-      include_precip: include_weather_events,
-      include_wind: include_weather_events,
-      include_weather_alerts: include_weather_events,
-      use_day_names: compact_view || eight_day, include_daily_weather: !compact_view && !eight_day,
-      weather_row: compact_view || eight_day, start_time_only: compact_view || eight_day,
-      always_show_today: compact_view || eight_day,
+      include_precip: include_precip_events,
+      include_wind: include_wind_events,
+      include_weather_alerts: include_ranged_weather_events && (include_temperature_events || include_precip_events || include_wind_events),
+      include_temperature: include_temperature_events,
+      use_day_names: compact_view, include_daily_weather: !compact_view,
+      weather_row: compact_view, start_time_only: compact_view,
+      always_show_today: compact_view,
       clothing_forecast: compact_view && configuration&.dig("clothing_forecast") == "true",
       auto_icons: compact_view && configuration&.dig("auto_assign_icons") != "false"
     }

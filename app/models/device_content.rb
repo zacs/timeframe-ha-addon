@@ -9,6 +9,7 @@ class DeviceContent
     include_precip: true,
     include_wind: true,
     include_weather_alerts: true,
+    include_temperature: true,
     use_day_names: false,
     include_daily_weather: true,
     weather_row: false,
@@ -54,7 +55,7 @@ class DeviceContent
     end
 
     if home_assistant_api.weather_healthy?
-      raw_events << home_assistant_api.hourly_calendar_events
+      raw_events << home_assistant_api.hourly_calendar_events if include_temperature || (weather_row && clothing_forecast)
       raw_events << home_assistant_api.daily_calendar_events if include_daily_weather
       raw_events << home_assistant_api.precip_calendar_events if include_precip
       raw_events << home_assistant_api.wind_calendar_events if include_wind
@@ -135,7 +136,7 @@ class DeviceContent
           end
           periodic_events = periodic_events.reject(&:weather?)
           weather_events = weather_events.select { |e| e.weather_hourly? && [8, 12, 16].include?(e.starts_at.hour) }
-          weather_row_data = weather_events.map { |e| e.as_json(date: date.to_date) }
+          weather_row_data = include_temperature ? weather_events.map { |e| e.as_json(date: date.to_date) } : []
 
           if clothing_forecast && clothing_threshold
             morning = weather_events.find { |e| e.starts_at.hour == 8 }
@@ -172,7 +173,7 @@ class DeviceContent
     if auto_icons
       out[:day_groups].each do |day|
         (day[:daily] + day[:periodic]).each do |event|
-          next if event[:kids_icon] || event[:weather] || event[:weather_ranged]
+          next if event[:timeframe_icon] || event[:weather] || event[:weather_ranged]
           matched = MdiIconMatcher.match(event[:summary])
           if matched
             event[:icon_class] = matched

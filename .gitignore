@@ -17,3 +17,4 @@ Gemfile.lock
 vendor/bundle/*
 test_output.txt
 test_full_output.txt
+engine/test/dummy/tmp/

@@ -90,7 +90,7 @@ class TwoDayVisualRegressionTest < ApplicationSystemTestCase
       mac_address: "TD:#{SecureRandom.hex(5).scan(/../).join(":").upcase}",
       display_template: "two_day",
       configuration: {
-        "show_all_events" => "true",
+        "only_show_events_with_icons" => "true",
         "show_weather_events" => "false",
         "show_event_times" => "true",
         "show_icons" => "true",
@@ -105,12 +105,15 @@ class TwoDayVisualRegressionTest < ApplicationSystemTestCase
     api.seed_calendars(events)
   end
 
-  def calendar_event(summary:, starts_at:, ends_at:, icon:)
+  def calendar_event(summary:, starts_at:, ends_at:, icon:, description: nil)
+    description ||= "timeframe-icon:#{icon}"
+
     {
       starts_at: starts_at,
       ends_at: ends_at,
       summary: summary,
-      icon: icon
+      icon: icon,
+      description: description
     }
   end
 

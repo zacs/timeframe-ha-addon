@@ -275,7 +275,6 @@ class DeviceTest < Minitest::Test
     assert_includes Device::SCREENSHOTTED_MODELS, "reterminal_e1001"
     assert_includes Device::SCREENSHOTTED_MODELS, "reterminal_e1003"
     assert_includes Device::SCREENSHOTTED_MODELS, "trmnl_x"
-    refute_includes Device::SCREENSHOTTED_MODELS, "display_1080p"
     refute_includes Device::SCREENSHOTTED_MODELS, "visionect_13"
     refute_includes Device::SCREENSHOTTED_MODELS, "boox_mira_pro"
     refute_includes Device::SCREENSHOTTED_MODELS, "boox_mira"
@@ -384,7 +383,6 @@ class DeviceTest < Minitest::Test
       display_template: "two_day",
       demo_mode_enabled: true,
       configuration: {
-        "show_all_events" => "true",
         "show_weather_events" => "false",
         "clothing_forecast" => "true"
       }
@@ -397,6 +395,44 @@ class DeviceTest < Minitest::Test
     assert result[:day_groups].first[:weather_row].any?, "Expected hourly weather to remain available"
     assert result[:day_groups].first[:clothing], "Expected clothing forecast to remain available"
     assert result[:day_groups].flat_map { |day| day[:periodic] }.none? { |event| event[:summary]&.include?("Gusts") }
+  end
+
+  def test_temperature_toggle_hides_hourly_weather_but_keeps_daily_weather
+    device = Device.create!(
+      location: test_location,
+      name: "test_hourly_temperature_toggle_#{SecureRandom.hex(4)}",
+      model: "visionect_13",
+      demo_mode_enabled: true,
+      configuration: {
+        "show_temperature_events" => "false"
+      }
+    )
+    current_time = ActiveSupport::TimeZone["America/Chicago"].local(2026, 3, 19, 8)
+
+    result = device.device_content(timezone: "America/Chicago", current_time: current_time)
+
+    all_daily = result[:day_groups].flat_map { |day| day[:daily] }
+    all_periodic = result[:day_groups].flat_map { |day| day[:periodic] }
+    assert all_daily.any? { |event| event[:weather] && event[:summary] == "72° / 50°" }
+    refute all_periodic.any? { |event| event[:weather] && event[:summary].to_s.end_with?("°") }
+  end
+
+  def test_weather_event_enabled_defaults_explicit_settings_and_legacy_setting
+    device = Device.new
+
+    assert device.weather_event_enabled?("show_temperature_events")
+    assert device.weather_event_enabled?("show_precip_events")
+
+    device.configuration = {"show_weather_events" => "false"}
+    assert device.weather_event_enabled?("show_temperature_events")
+    refute device.weather_event_enabled?("show_precip_events")
+    refute device.weather_event_enabled?("show_wind_events")
+
+    device.configuration = {"show_precip_events" => "false"}
+    refute device.weather_event_enabled?("show_precip_events")
+
+    device.configuration = {"show_precip_events" => "true", "show_weather_events" => "false"}
+    assert device.weather_event_enabled?("show_precip_events")
   end
 
   def test_two_day_uses_today_and_tomorrow_before_default_rollover_time
@@ -477,7 +513,6 @@ class DeviceTest < Minitest::Test
       display_template: "three_day",
       demo_mode_enabled: true,
       configuration: {
-        "show_all_events" => "true",
         "show_weather_events" => "false",
         "clothing_forecast" => "true"
       }

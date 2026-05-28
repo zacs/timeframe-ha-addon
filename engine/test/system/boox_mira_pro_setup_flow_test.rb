@@ -46,7 +46,7 @@ class BooxMiraProSetupFlowTest < ApplicationSystemTestCase
     # Step 5: Enable demo mode so the display has content
     card = first("h5", text: device_name).ancestor(".card")
     within(card) do
-      click_link "Configure"
+      click_link "Settings"
     end
     within(first(".form-check", text: "Demo Mode")) do
       find("input[type='checkbox'][role='switch']").check

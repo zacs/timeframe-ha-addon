@@ -194,6 +194,48 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
+  def test_include_temperature_false_excludes_hourly_weather_but_keeps_daily_weather
+    travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
+      api = new_test_api
+      tz = "America/Denver"
+      current_time = ActiveSupport::TimeZone[tz].local(2023, 8, 27, 8)
+      hourly_event = DeviceEvent.new(
+        id: "_ha_weather_hour_#{current_time.change(hour: 12).to_i}",
+        starts_at: current_time.change(hour: 12),
+        ends_at: current_time.change(hour: 12),
+        summary: "72°",
+        icon: "weather-sunny",
+        timezone: tz
+      )
+      daily_event = DeviceEvent.new(
+        id: "_ha_weather_day_#{current_time.beginning_of_day.to_i}",
+        starts_at: current_time.beginning_of_day,
+        ends_at: current_time.tomorrow.beginning_of_day,
+        summary: "80° / 60°",
+        icon: "weather-sunny",
+        timezone: tz
+      )
+
+      api.stub :weather_healthy?, true do
+        api.stub :hourly_calendar_events, [hourly_event] do
+          api.stub :daily_calendar_events, [daily_event] do
+            result = DeviceContent.new.call(
+              home_assistant_api: api,
+              current_time: current_time,
+              days: 1,
+              always_show_today: true,
+              include_temperature: false
+            )
+
+            today = result[:day_groups].first
+            assert today[:daily].any? { |event| event[:summary] == "80° / 60°" }
+            assert today[:periodic].none? { |event| event[:summary] == "72°" }
+          end
+        end
+      end
+    end
+  end
+
   def test_start_time_only_flag
     travel_to DateTime.new(2023, 8, 27, 10, 0, 0, "-0600") do
       result = DeviceContent.new.call(home_assistant_api: new_test_api, start_time_only: true)
@@ -619,22 +661,26 @@ class DeviceContenttTest < Minitest::Test
     end
   end
 
-  def test_auto_icons_preserves_kids_icon
+  def test_auto_icons_preserves_timeframe_icon
     travel_to DateTime.new(2023, 8, 27, 7, 0, 0, "-0600") do
       api = new_test_api
       tz = "America/Denver"
       events = [
-        DeviceEvent.new(id: "1", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church", icon: "calendar", description: "timeframe-kids-icon:church", timezone: tz)
+        DeviceEvent.new(id: "1", starts_at: DateTime.new(2023, 8, 27, 9, 0, 0, "-0600"), ends_at: DateTime.new(2023, 8, 27, 10, 0, 0, "-0600"), summary: "Church", icon: "calendar", description: "timeframe-icon:church", timezone: tz)
       ]
+      matcher = ->(_) { "soccer" }
+
       api.stub :calendars_healthy?, false do
         api.stub :private_mode?, false do
           api.stub :calendar_events, events do
-            result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
+            MdiIconMatcher.stub :match, matcher do
+              result = DeviceContent.new.call(home_assistant_api: api, auto_icons: true, always_show_today: true)
 
-            today = result[:day_groups].find { |d| d[:day_name] == "Today" }
-            event = today[:periodic].find { |e| e[:summary] == "Church" }
-            assert_equal "church", event[:kids_icon]
-            assert_equal "calendar", event[:icon_class]
+              today = result[:day_groups].find { |d| d[:day_name] == "Today" }
+              event = today[:periodic].find { |e| e[:summary] == "Church" }
+              assert_equal "church", event[:timeframe_icon]
+              assert_equal "church", event[:icon_class]
+            end
           end
         end
       end

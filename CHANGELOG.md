@@ -1,3 +1,17 @@
+## [2.13.0] - 2026-05-26
+
+### Added
+w- Individual toggles for precipitation and wind events on two-day and three-day templates (previously a single "Show Weather Events" toggle controlled both)
+- "Hide Current Day After Time" option on two-day template: automatically advances to show tomorrow once the configured time passes (default 6:00 PM)
+- Granular weather event toggles now respect the legacy `show_weather_events=false` setting for existing devices
+
+### Changed
+- Two-day template title wrapping is now suppressed when titles fit on a single line
+- Two-day and three-day templates use a compact time format
+
+### Fixed
+- Deleting a device from the settings page redirected back to the now-deleted settings URL (404); now redirects to the dashboard with a confirmation notice
+
 ## [2.12.0] - 2026-05-18
 
 ### Added
